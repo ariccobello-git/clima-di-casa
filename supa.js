@@ -9,8 +9,8 @@
     t = String(t || '').replace(/[^0-9+]/g, ''); if (t.indexOf('00') === 0) t = '+' + t.slice(2);
     if (t.charAt(0) !== '+') t = '+39' + t.replace(/^0+(?=3)/, ''); return t;
   }
-  // L'accesso vale solo finché usi l'app: scade dopo 1 minuto senza tocchi, a schermo spento o se esci dall'app per più di GRACE secondi.
-  var GRACE = 20, IDLE = 60;
+  // L'accesso vale solo finché usi l'app: scade dopo 1 minuto senza tocchi, a schermo spento o se esci dall'app per più di 10 secondi.
+  var GRACE = 10, IDLE = 60;
   function ss() { try { return window.sessionStorage; } catch (e) { return null; } }
   // Pulizia di vecchi accessi salvati in modo permanente.
   try { localStorage.removeItem('clima.tok'); localStorage.removeItem('clima.me'); ['clima_tok', 'clima_me'].forEach(function (k) { document.cookie = k + '=; path=/; max-age=0'; }); } catch (e) {}

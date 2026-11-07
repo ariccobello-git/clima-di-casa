@@ -10,7 +10,7 @@
   setInterval(function () { if (!document.hidden) { window.SB.touch(); if (!window.SB.tok()) fuori(); } }, 3000);
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) { nascosto = Date.now(); window.SB.touch(); }
-    else if (nascosto && Date.now() - nascosto > 2000) { window.SB.clear(); fuori(); } else fuori();
+    else if (nascosto && Date.now() - nascosto > 10000) { window.SB.clear(); fuori(); } else fuori();
   });
   window.addEventListener('pagehide', function () { window.SB.touch(); });
   window.addEventListener('pageshow', fuori);

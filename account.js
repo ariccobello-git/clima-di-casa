@@ -1,0 +1,65 @@
+(function () {
+  var SB = window.SB, U = window.UI, app = document.getElementById('app');
+  var me = SB.me() || { nome: '', admin: false }, users = null, st = { msg: '', bad: false, open: null, nuova: null, conf: null, add: { nome: '', tel: '+39 ', pwd: '' } };
+  function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function gen() { var a = new Uint32Array(1); (window.crypto || window.msCrypto).getRandomValues(a); return String(a[0] % 1000000).padStart(6, '0'); }
+  function say(t, bad) { st.msg = t; st.bad = !!bad; render(); }
+  function msg() { return st.msg ? '<p class="' + (st.bad ? 'err' : 'ok') + '" role="status">' + esc(st.msg) + '</p>' : ''; }
+  var E = { nome: 'Nome da 2 a 30 caratteri.', password: 'La password deve avere 6 cifre.', telefono: 'Numero non valido: serve il prefisso, per esempio +39…', esistente: 'Esiste già un account con questo nome.', se_stesso: 'Non puoi eliminare il tuo account.', vecchia: 'La password attuale non è corretta.', formato: 'La nuova password deve avere 6 cifre.', sessione: 'Sessione scaduta: accedi di nuovo.' };
+
+  function lista() {
+    if (!users) return '<p class="sm">Carico…</p>';
+    return '<ul class="lst">' + users.map(function (u) {
+      var h = '<li style="flex-wrap:wrap"><span><strong>' + esc(u.nome) + (u.admin ? ' · Admin' : '') + '</strong><span class="wh">' + esc(u.telefono) + (u.bloccato ? ' · <b style="color:#c0392b">Bloccato</b>' : '') + '</span>' +
+        (u.codice ? '<span class="wh">Richiesta reset: codice <b class="tn">' + esc(u.codice) + '</b> da comunicare</span>' : '') + '</span>' +
+        '<span class="rw">' + (u.bloccato ? '<button class="chip" data-a="sblocca" data-id="' + u.id + '">Sblocca</button>' : '') +
+        '<button class="chip" data-a="pwd" data-id="' + u.id + '">Nuova password</button><button class="chip" data-a="tel" data-id="' + u.id + '">Telefono</button>' +
+        (u.nome === me.nome ? '' : '<button class="chip" data-a="del" data-id="' + u.id + '">' + (st.conf === u.id ? 'Conferma elimina' : 'Elimina') + '</button>') + '</span>';
+      if (st.nuova && st.nuova.id === u.id) h += '<div style="flex-basis:100%"><p class="ok">Nuova password di ' + esc(u.nome) + ': <span class="cd">' + esc(st.nuova.p) + '</span><br><span class="wh">Comunicala all’utente. Non verrà più mostrata.</span></p></div>';
+      if (st.open === u.id) h += '<div style="flex-basis:100%"><input class="in" id="nt" type="tel" value="' + esc(u.telefono) + '" aria-label="Telefono"><button class="btn sm2" data-a="savetel" data-id="' + u.id + '">Salva numero</button></div>';
+      return h + '</li>';
+    }).join('') + '</ul>';
+  }
+
+  function render() {
+    var h = '<div><h1>Account</h1><p>' + esc(me.nome) + (me.admin ? ' · amministratore' : '') + '</p></div>';
+    h += '<section class="card"><b>Cambia password</b><input class="in pin" id="old" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="Attuale" aria-label="Password attuale">' +
+      '<input class="in pin" id="new" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="Nuova" aria-label="Nuova password">' + (me.admin ? '' : msg()) +
+      '<button class="btn" data-a="chg">Cambia password</button><button class="btn sec2" data-a="out">Esci</button></section>';
+    if (me.admin) {
+      h += '<h2>Utenti</h2><section class="card">' + msg() + lista() + '</section>' +
+        '<h2>Nuovo utente</h2><section class="card"><input class="in" id="an" placeholder="Nome" value="' + esc(st.add.nome) + '" aria-label="Nome" maxlength="30">' +
+        '<input class="in" id="at" type="tel" placeholder="Telefono" value="' + esc(st.add.tel) + '" aria-label="Telefono">' +
+        '<input class="in pin" id="ap" type="text" inputmode="numeric" maxlength="6" placeholder="Password" value="' + esc(st.add.pwd) + '" aria-label="Password"><button class="btn sec2" data-a="gen">Genera password</button>' +
+        '<button class="btn" data-a="add">Crea utente</button><p class="sm">Comunica nome e password all’utente. Dopo la creazione la password non è più visibile a nessuno.</p></section>';
+    }
+    h += '<div class="cmds"><a class="cm" href="guida-reset.html"><i class="ab">' + U.I('shield') + '</i><b>Guida al reset</b><small>Password dimenticata</small></a></div>';
+    app.innerHTML = h; U.applyHue(235); U.nav('account');
+  }
+  function carica() { return SB.rpc('admin_elenco', { tok: SB.tok() }).then(function (r) { users = r; render(); }).catch(function () { say('Elenco non disponibile.', true); }); }
+  function rd(id) { return users.filter(function (u) { return String(u.id) === String(id); })[0]; }
+  function tok() { return SB.tok(); }
+
+  app.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || !b.hasAttribute('data-a')) return;
+    var a = b.getAttribute('data-a'), id = b.getAttribute('data-id') && +b.getAttribute('data-id');
+    if (me.admin && document.getElementById('an')) st.add = { nome: document.getElementById('an').value, tel: document.getElementById('at').value, pwd: document.getElementById('ap').value };
+    if (a === 'out') { SB.rpc('esci', { tok: tok() }).catch(function () {}).then(function () { SB.clear(); location.replace('accesso.html'); }); return; }
+    if (a === 'chg') {
+      var o = document.getElementById('old').value, n = document.getElementById('new').value;
+      if (!/^\d{6}$/.test(n)) return say(E.formato, true);
+      SB.rpc('cambia_password', { tok: tok(), vecchia: o, nuova: n }).then(function (r) { r.ok ? say('Password cambiata.') : say(E[r.errore] || 'Errore.', true); }).catch(function () { say('Collegamento non riuscito.', true); });
+    } else if (a === 'gen') { st.add.pwd = gen(); render(); }
+    else if (a === 'add') {
+      var d = st.add; SB.rpc('admin_crea', { tok: tok(), p_nome: d.nome, p_pwd: d.pwd, p_tel: SB.norm(d.tel) }).then(function (r) {
+        if (r.ok) { st.add = { nome: '', tel: '+39 ', pwd: '' }; st.msg = 'Utente creato.'; st.bad = false; carica(); } else say(E[r.errore] || 'Errore.', true);
+      }).catch(function () { say('Collegamento non riuscito.', true); });
+    } else if (a === 'sblocca') SB.rpc('admin_sblocca', { tok: tok(), p_id: id }).then(function () { st.msg = 'Sbloccato.'; st.bad = false; carica(); });
+    else if (a === 'pwd') SB.rpc('admin_nuova_password', { tok: tok(), p_id: id }).then(function (r) { st.nuova = { id: id, p: r.password }; st.msg = ''; carica(); }).catch(function () { say('Operazione non riuscita.', true); });
+    else if (a === 'tel') { st.open = st.open === id ? null : id; render(); }
+    else if (a === 'savetel') SB.rpc('admin_telefono', { tok: tok(), p_id: id, p_tel: SB.norm(document.getElementById('nt').value) }).then(function (r) { if (r.ok) { st.open = null; st.msg = 'Numero aggiornato.'; st.bad = false; carica(); } else say(E[r.errore] || 'Errore.', true); });
+    else if (a === 'del') { if (st.conf !== id) { st.conf = id; render(); return; } st.conf = null; SB.rpc('admin_elimina', { tok: tok(), p_id: id }).then(function (r) { r.ok ? (st.msg = 'Eliminato.', st.bad = false, carica()) : say(E[r.errore] || 'Errore.', true); }); }
+  });
+  render(); if (me.admin) carica();
+  SB.rpc('sessione', { tok: tok() }).then(function (r) { if (r && r.admin !== me.admin) { me = r; render(); if (r.admin) carica(); } }).catch(function () {});
+})();

@@ -95,3 +95,10 @@ html.dk .tabs{border-color:rgba(255,255,255,.12)}
 @media(prefers-reduced-motion:reduce){*,*:before{animation:none!important;transition:none!important}}
 .lst{list-style:none;margin:0;padding:0}.lst li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--fill)}.lst li:first-child{border-top:0}.lst li>span:first-child{min-width:0;flex:1}.lst .wh{display:block;font-size:13px;color:var(--mu)}.lst .deg{font:800 20px ui-rounded,-apple-system,sans-serif;white-space:nowrap}.lst .deg.o{color:var(--mu);font-size:16px}.lst .chip{min-height:36px;padding:6px 12px;margin:2px 0}.lst .chip:disabled{opacity:.45}
 .lu b{display:block}.lu small{color:var(--mu);font-size:13px}
+.in{width:100%;min-height:50px;border-radius:14px;border:1px solid var(--fill);padding:0 14px;font:17px -apple-system,sans-serif;background:var(--solid);color:var(--tx);margin:6px 0;box-sizing:border-box}.in.pin{font-size:26px;letter-spacing:.4em;text-align:center}
+.err{color:#c0392b;font-weight:600;font-size:15px;margin:6px 0}.ok{color:#1e8449;font-weight:600;font-size:15px;margin:6px 0}
+.chips.wrap{flex-wrap:wrap;overflow:visible}.chip.u{--dc:var(--pri)}
+.cd{font:800 28px ui-rounded,-apple-system,sans-serif;letter-spacing:.15em;color:var(--pri)}
+.btn.sm2{min-height:40px;font-size:15px;margin:6px 0;border-radius:14px;padding:0 14px;width:auto}
+.rw{display:flex;gap:8px;flex-wrap:wrap}
+.in.pin::placeholder{letter-spacing:normal;font-size:17px}

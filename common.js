@@ -43,7 +43,7 @@
   try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { applyHue(H); }); } catch (e) {}
 
   function nav(a) {
-    var t = [['home', 'index.html', 'Stagioni', 'home'], ['inverno', 'inverno.html', 'Inverno', 'snow'], ['estate', 'estate.html', 'Estate', 'sun'], ['meteo', 'meteo.html', 'Meteo', 'drop'], ['consigli', 'consigli.html', 'Consigli', 'bulb']];
+    var t = [['home', 'index.html', 'Stagioni', 'home'], ['inverno', 'inverno.html', 'Inverno', 'snow'], ['estate', 'estate.html', 'Estate', 'sun'], ['meteo', 'meteo.html', 'Meteo', 'drop'], ['account', 'account.html', 'Account', 'shield']];
     var el = document.createElement('nav'); el.className = 'tabs'; el.setAttribute('aria-label', 'Sezioni');
     el.innerHTML = t.map(function (x) { return '<a href="' + x[1] + '"' + (a === x[0] ? ' class="on" aria-current="page"' : '') + '><span>' + I(x[3]) + '</span>' + x[2] + '</a>'; }).join('');
     document.body.appendChild(el);

@@ -115,7 +115,7 @@
     try { new MutationObserver(function () { if (!busy) pianifica(); }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTR }); } catch (e) {}
   }
   function imposta(l) {
-    if (LINGUE.indexOf(l) < 0) return; L = l; if (l !== 'it') usata = true; try { ls().setItem(LS, l); } catch (e) {}
+    if (LINGUE.indexOf(l) < 0) return; try { sessionStorage.setItem('clima.sy', String(Math.round(window.scrollY || 0))); } catch (e) {} L = l; if (l !== 'it') usata = true; try { ls().setItem(LS, l); } catch (e) {}
     tutto();
     try { root.dispatchEvent(new Event('lingua')); } catch (e) {}
   }
@@ -125,4 +125,12 @@
     document.documentElement.setAttribute('lang', L);
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', avvia); else avvia();
   }
+  // Dopo il cambio lingua la pagina si ricarica: rimetto lo scroll dov'era, senza salti.
+  (function () {
+    var y = null; try { y = sessionStorage.getItem('clima.sy'); sessionStorage.removeItem('clima.sy'); if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+    if (y === null) return; y = +y; var fermo = false;
+    ['touchstart', 'wheel', 'keydown'].forEach(function (ev) { window.addEventListener(ev, function () { fermo = true; }, { passive: true, once: true }); });
+    function vai() { if (!fermo) window.scrollTo(0, y); }
+    [0, 60, 150, 300, 600, 1000].forEach(function (t) { setTimeout(vai, t); }); document.addEventListener('DOMContentLoaded', vai); window.addEventListener('load', vai);
+  })();
 })(typeof window !== 'undefined' ? window : this);

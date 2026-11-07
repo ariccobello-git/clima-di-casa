@@ -83,7 +83,7 @@
     var b = e.target.closest('button'); if (!b || b.disabled) return; var st = C.load();
     if (b.hasAttribute('data-fine')) { leggi(); conf = true; render(); window.scrollTo(0, 0); }
     else if (b.hasAttribute('data-rivedi')) { conf = false; passo = 1; render(); window.scrollTo(0, 0); }
-    else if (b.hasAttribute('data-tema')) { U.setTema(b.getAttribute('data-tema')); render(); }
+    else if (b.hasAttribute('data-tema')) { var y0 = window.scrollY; U.setTema(b.getAttribute('data-tema')); render(); window.scrollTo(0, y0); }
     else if (b.hasAttribute('data-lang')) { if (window.I18N) { window.I18N.imposta(b.getAttribute('data-lang')); location.reload(); } }
     else if (b.hasAttribute('data-mod')) { modifica = true; passo = 1; render(); window.scrollTo(0, 0); }
     else if (b.hasAttribute('data-canc')) { chiedi = b.getAttribute('data-canc') === '1'; render(); }

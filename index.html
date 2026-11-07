@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef0f8">
+<title>Clima di casa</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Clima di casa">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app"></main>
+<script src="schedule.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  var S = window.SCHED, U = window.UI, now = S.stagioneOggi(new Date());
+  U.applyHue(235);
+  function sec(cls, href, emb, titolo, sotto, chips, on) {
+    return '<a class="sec ' + cls + '" href="' + href + '"><span class="sic" aria-hidden="true">' + U.I(emb) + '</span><div style="position:relative;min-width:0"><b>' + titolo + '</b><small>' + sotto + '</small><div class="sst">' + chips + (on ? '<span class="bd">In corso</span>' : '') + '</div></div><span class="go" aria-hidden="true">' + U.I('chev') + '</span></a>';
+  }
+  document.getElementById('app').innerHTML =
+    '<div><p>' + new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) + '</p><h1>Clima di casa</h1><p>Scegli la stagione per vedere le temperature da impostare mese per mese.</p></div>' +
+    '<div style="height:10px"></div>' +
+    sec('w', 'inverno.html', 'snow', 'Inverno', 'Riscaldamento da novembre ad aprile', '<span class="bd">19–20 °C</span><span class="bd">Caldo</span>', now === 'inverno') +
+    sec('s', 'estate.html', 'sun', 'Estate', 'Raffrescamento da giugno a settembre', '<span class="bd">26–27 °C</span><span class="bd">Freddo</span>', now === 'estate') +
+    '<div class="cmds"><a class="cm" href="consigli.html"><i class="ab">' + U.I('bulb') + '</i><b>Consigli di risparmio</b><small>Inverno ed estate</small></a>' +
+    '<a class="cm" href="spiegazione.html"><i class="ab">' + U.I('bolt') + '</i><b>Perché elettrico e non gas</b><small>Costi a confronto</small></a></div>' +
+    '<p class="sm" style="text-align:center;margin-top:8px">Acceso solo quando sei in casa, spento fuori casa e di notte.</p>';
+  U.nav('home');
+})();
+</script>
+</body>
+</html>

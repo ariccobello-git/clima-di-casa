@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef0f8">
+<title>Perché elettrico e non gas</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Clima di casa">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <div class="hd"><a class="back" href="inverno.html"><span id="bk"></span>Inverno</a><span class="emb" id="eb" aria-hidden="true"></span></div>
+  <div>
+    <h1>Perché elettrico e non gas</h1>
+    <p class="lead" style="margin-top:8px">Il condizionatore a pompa di calore non brucia nulla: sposta il calore da fuori a dentro. Per ogni kWh di luce che consuma, ne porta in casa circa 3 o 4 sotto forma di calore.</p>
+  </div>
+
+  <section class="card">
+    <h2>Quanto costa il calore</h2>
+    <p>Costo di 1 kWh di calore in casa, con i prezzi delle nostre bollette (tasse comprese). Muovi il cursore per vedere cosa succede se il condizionatore rende meno o di più.</p>
+    <div>
+      <label for="cop"><strong>Rendimento (COP): <span id="copv" class="tnum">3,5</span></strong></label>
+      <input id="cop" type="range" min="2" max="5" step="0.1" value="3.5">
+      <p class="small">A Roma in inverno un buon inverter rende di solito tra 3 e 4. Con le notti più fredde scende.</p>
+    </div>
+    <div class="cmp" role="img" aria-label="Confronto del costo del calore tra gas e pompa di calore">
+      <div class="line"><div class="lab"><span>Caldaia a gas</span><strong class="tnum" id="cg"></strong></div><div class="track"><div class="fill gas" id="bg"></div></div></div>
+      <div class="line"><div class="lab"><span>Condizionatore</span><strong class="tnum" id="cp"></strong></div><div class="track"><div class="fill pump" id="bp"></div></div></div>
+    </div>
+    <p class="result" id="res"></p>
+  </section>
+
+  <section class="card">
+    <h2>In un anno</h2>
+    <p>Per scaldare casa servono circa 3.000 kWh di calore (è quello che abbiamo usato con il gas lo scorso inverno, circa 300 Smc).</p>
+    <div class="wrap">
+    <table>
+      <thead><tr><th></th><th class="n">Gas</th><th class="n">Condizionatore</th></tr></thead>
+      <tbody>
+        <tr><td>Consumo</td><td class="n">300 Smc</td><td class="n" id="tk"></td></tr>
+        <tr><td>Costo riscaldamento</td><td class="n" id="ta"></td><td class="n" id="tb"></td></tr>
+        <tr><td><strong>Differenza</strong></td><td class="n"></td><td class="n"><strong id="td"></strong></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="small">Il gas resta per acqua calda e cucina, con la sua quota fissa. La luce in più sale di circa 850 kWh all'anno. Sono stime: il risultato vero dipende dal modello e dal clima.</p>
+  </section>
+
+  <section class="card">
+    <h2>Quando non conviene</h2>
+    <ul class="plain">
+      <li>Se il rendimento scende sotto circa <strong class="tnum" id="be"></strong>, il gas costa meno. A Roma succede di rado.</li>
+      <li>Il contatore è da 3 kW: forno, lavatrice e piastra insieme al condizionatore possono farlo scattare.</li>
+      <li>Nelle giornate molto fredde il condizionatore consuma di più e rende meno.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Come controlliamo durante la prova</h2>
+    <p>Leggiamo ogni giorno i kWh sul contatore o sull'app. Il consumo in più dovuto al riscaldamento dovrebbe stare qui:</p>
+    <div class="wrap">
+    <table>
+      <thead><tr><th>Mese</th><th class="n">kWh in più al giorno</th></tr></thead>
+      <tbody>
+        <tr><td>Novembre e marzo</td><td class="n">2 – 4</td></tr>
+        <tr><td>Dicembre e febbraio</td><td class="n">4 – 6</td></tr>
+        <tr><td>Gennaio</td><td class="n">8 – 9</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>Con il condizionatore acceso solo quando siamo in casa è normale stare nella parte bassa di questi valori. Se supera 12 kWh al giorno, abbassiamo le temperature di 1 °C e rifacciamo il confronto con il gas.</p>
+  </section>
+
+  <a class="btn" href="inverno.html">Vai alle temperature d’inverno</a>
+
+  <p class="small">Come abbiamo calcolato: gas 1,36 €/Smc con tasse, 1 Smc = 11,1 kWh, caldaia al 90% (circa 10 kWh di calore per Smc). Luce 0,28 €/kWh con tasse. Prezzi dalle bollette di settembre e ottobre 2026.</p>
+</main>
+<script src="schedule.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  var S = window.SCHED, U = window.UI;
+  U.applyHue(172);
+  document.getElementById('bk').innerHTML = U.I('back');
+  document.getElementById('eb').innerHTML = U.I('bolt');
+  U.nav('inverno');
+  function eur(x, d) { return x.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function num(x, d) { return x.toLocaleString('it-IT', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  var gas = S.costoGasKwh(), max = Math.max(gas, S.costoPompaKwh(2)) * 1.05;
+  document.getElementById('be').textContent = num(S.pareggio(), 1);
+  function draw() {
+    var cop = parseFloat(document.getElementById('cop').value), p = S.costoPompaKwh(cop), a = S.annuale(cop);
+    document.getElementById('copv').textContent = num(cop, 1);
+    document.getElementById('cg').textContent = eur(gas, 3) + ' / kWh';
+    document.getElementById('cp').textContent = eur(p, 3) + ' / kWh';
+    document.getElementById('bg').style.width = (gas / max * 100) + '%';
+    document.getElementById('bp').style.width = (p / max * 100) + '%';
+    var diff = a.gas - a.pompa, r = document.getElementById('res');
+    r.textContent = diff > 0
+      ? 'Con rendimento ' + num(cop, 1) + ' il condizionatore costa il ' + Math.round((1 - p / gas) * 100) + '% in meno del gas.'
+      : 'Con rendimento ' + num(cop, 1) + ' il gas costa meno.';
+    document.getElementById('tk').textContent = '≈ ' + Math.round(a.kwhEl / 10) * 10 + ' kWh';
+    document.getElementById('ta').textContent = eur(a.gas, 0);
+    document.getElementById('tb').textContent = eur(a.pompa, 0);
+    document.getElementById('td').textContent = (diff >= 0 ? '−' : '+') + eur(Math.abs(diff), 0);
+  }
+  document.getElementById('cop').addEventListener('input', draw);
+  draw();
+})();
+</script>
+</body>
+</html>

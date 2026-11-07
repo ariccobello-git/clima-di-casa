@@ -2,7 +2,6 @@
   var S = window.SCHED, C = window.CLIMA, U = window.UI, app = document.getElementById('app');
   var info = null, err = false, live = null, liveErr = false;
   function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function seg(name, items, cur) { return '<div class="seg" role="group">' + items.map(function (i) { return '<button type="button" data-' + name + '="' + i[0] + '" aria-pressed="' + (i[0] === cur) + '">' + i[1] + '</button>'; }).join('') + '</div>'; }
   function r(x) { return Math.round(x); }
   // Tipo di giornata dal codice del tempo, dalle temperature e dall'umidità: serve a scegliere animazione ed etichetta.
   function tipo(code, tmax, tmin, um) {
@@ -67,8 +66,6 @@
       if (!l.casa) h += '<p class="note2"><b>Sessione fuori casa</b>: stai gestendo ' + esc(l.nome) + '.' + (casa ? ' <button type="button" class="chip" data-use="' + casa.id + '">Torna a ' + esc(casa.nome.split(',')[0]) + '</button>' : '') + '</p>';
       if (live) h += adesso(); else h += '<section class="card"><p class="sm">' + (liveErr ? 'Meteo non raggiungibile ora. Riprova tra poco.' : 'Carico il meteo…') + '</p></section>';
     }
-    h += '<h2>Dati per le temperature</h2><section class="card">' + seg('fonte', [['live', 'Meteo live'], ['storico', 'Anno ' + C.annoScorso()]], st.fonte) +
-      '<p class="sm">' + (st.fonte === 'live' ? 'A ogni apertura legge le previsioni di oggi e ricalcola il mese in corso.' : 'Usa le medie consolidate del ' + C.annoScorso() + ' per ogni mese. Dall’anno nuovo passa da solo all’anno concluso.') + '</p></section>';
     h += '<h2>Temperature da impostare</h2><section class="card">' + (err ? '<p class="sm">Meteo non raggiungibile: valori standard.</p>' : '') + tabella() + '<p class="sm">Lo stile (risparmio, bilanciato, comfort) si sceglie nelle pagine Inverno ed Estate.</p></section>';
     h += '<p class="sm" style="text-align:center">Dati meteo: <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0).</p>';
     app.innerHTML = h; U.applyHue(hue);
@@ -83,8 +80,7 @@
   }
   app.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b || b.disabled) return; var st = C.load();
-    if (b.hasAttribute('data-fonte')) { st.fonte = b.getAttribute('data-fonte'); C.save(st); carica(); }
-    else if (b.hasAttribute('data-use')) { st.attivo = b.getAttribute('data-use'); C.save(st); live = null; carica(); }
+    if (b.hasAttribute('data-use')) { st.attivo = b.getAttribute('data-use'); C.save(st); live = null; carica(); }
   });
   render(); U.nav('meteo'); carica();
 })();

@@ -88,7 +88,6 @@
     var h = '<div><b>' + (l ? l.nome + (l.casa ? ' · Casa' : ' · Sessione fuori casa') : 'Nessun luogo scelto') + '</b><small>';
     if (!l) h += 'Scegli il luogo per usare il meteo.';
     else if (errore) h += 'Meteo non raggiungibile: uso i valori standard. Stile ' + C.STILI[st.stile].nome + '.';
-    else if (st.fonte === 'nessuno') h += 'Valori standard · stile ' + C.STILI[st.stile].nome + '.';
     else if (!info) h += 'Controllo il meteo…';
     else if (st.fonte === 'storico') h += 'Medie del ' + info.anno + ' · stile ' + C.STILI[st.stile].nome + '.';
     else h += 'Previsioni di oggi, ora ' + Math.round(info.live.adesso.t) + ' °C fuori · stile ' + C.STILI[st.stile].nome + '.';

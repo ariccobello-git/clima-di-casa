@@ -4,7 +4,6 @@
   function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function eur(x) { return Math.round(x).toLocaleString('it-IT') + ' €'; }
   function it(x, d) { return x.toLocaleString('it-IT', { minimumFractionDigits: d, maximumFractionDigits: d }); }
-  function badge(f) { var e = E.etichetta(f); return '<span class="src">' + U.I(e.icon) + e.sym + ' · ' + e.nome + '</span>'; }
 
   function render() {
     var st = E.load(), now = new Date(), pr = E.prezzi(st, mkt), tm = E.tmedDa(S, C, now), m = E.meseRef(now) || 11;

@@ -96,7 +96,7 @@
         S.ov[m] = r.t; if (r.motivo) info.motivi[m] = r.motivo;
       });
     }
-    if (!l || st.fonte === 'nessuno') { calc(null); return Promise.resolve(info); }
+    if (!l) { calc(null); return Promise.resolve(info); }
     if (st.fonte === 'storico') return api.storico(l, now).then(function (r) { info.anno = r.anno; calc(function (m) { return r.mesi[m]; }); return info; });
     return api.live(l, now).then(function (v) { info.live = v; var oggi = v.giorni[0], mm = now.getMonth() + 1; calc(function () { return oggi; }, mm); return info; });
   };

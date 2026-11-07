@@ -1,6 +1,5 @@
 (function () {
   var URL_ = 'https://agwydrzrhalzwpjvojux.supabase.co', KEY = 'sb_publishable_T6DIn_sDca3tv3T5M_WZVg_fQiUrE3V';
-  function ls() { try { return window.localStorage; } catch (e) { return null; } }
   function rpc(fn, args) {
     return fetch(URL_ + '/rest/v1/rpc/' + fn, { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args || {}) })
       .then(function (r) { return r.text().then(function (t) { var j = null; try { j = JSON.parse(t); } catch (e) {} if (!r.ok) throw new Error((j && j.message) || 'HTTP ' + r.status); return j; }); });

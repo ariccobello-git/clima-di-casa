@@ -28,7 +28,7 @@
     touch: function () { var s = ss(); try { if (s && s.getItem('clima.tok')) s.setItem('clima.seen', String(Date.now())); } catch (e) {} },
     me: function () { try { return JSON.parse(ss().getItem('clima.me')); } catch (e) { return null; } },
     set: function (tok, nome, admin) { var s = ss(); try { if (s) { s.setItem('clima.tok', tok); s.setItem('clima.me', JSON.stringify({ nome: nome, admin: !!admin })); s.setItem('clima.seen', String(Date.now())); } } catch (e) {} },
-    clear: function () { var s = ss(); try { if (s) ['clima.tok', 'clima.me', 'clima.seen'].forEach(function (k) { s.removeItem(k); }); } catch (e) {} }
+    clear: function () { var s = ss(); try { if (s) ['clima.tok', 'clima.me', 'clima.seen', 'clima.mirror', 'clima.dek', 'clima.vh'].forEach(function (k) { s.removeItem(k); }); } catch (e) {} }
   };
 
   // Nell'app sulla Home non c'è "tira per aggiornare": lo aggiungo io.

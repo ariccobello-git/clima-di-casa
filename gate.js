@@ -1,6 +1,6 @@
 (function () {
   var tok = window.SB.tok(), root = document.documentElement;
-  if (!tok) { location.replace('accesso.html'); return; }
+  if (!tok || !(window.VAULT && window.VAULT.ok())) { window.SB.clear(); location.replace('accesso.html'); return; }
   function fuori() { if (!window.SB.tok()) location.replace('accesso.html'); }
   // Finché l'app è aperta l'accesso resta attivo; se esci e torni dopo più di pochi secondi, viene richiesto di nuovo.
   setInterval(function () { if (!document.hidden) window.SB.touch(); }, 3000);

@@ -11,15 +11,17 @@
     getJson: function (url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); },
     store: function () { try { return root.localStorage; } catch (e) { return null; } }
   };
-  function rd(k) { try { return JSON.parse(api.store().getItem(k)); } catch (e) { return null; } }
-  function wr(k, v) { try { api.store().setItem(k, JSON.stringify(v)); } catch (e) {} }
-  api.load = function () { var s = rd(KEY) || {}; var o = {}; for (var k in DEF) o[k] = s[k] !== undefined ? s[k] : DEF[k]; o.luoghi = o.luoghi || []; if (o.fonte === 'nessuno') o.fonte = 'storico'; return o; };
+  // I dati personali passano dal vault cifrato; senza vault (test in Node) uso lo storage locale.
+  function rd(k) { try { return root.VAULT ? root.VAULT.get(k) : JSON.parse(api.store().getItem(k)); } catch (e) { return null; } }
+  function wr(k, v) { try { if (root.VAULT) root.VAULT.set(k, v); else api.store().setItem(k, JSON.stringify(v)); } catch (e) {} }
+  api.load = function () { var s = rd(KEY) || {}; var o = {}; for (var k in DEF) o[k] = s[k] !== undefined ? s[k] : DEF[k]; o.luoghi = (o.luoghi || []).map(function (l) { l.lat = +(+l.lat).toFixed(2); l.lon = +(+l.lon).toFixed(2); return l; }); if (o.fonte === 'nessuno') o.fonte = 'storico'; return o; };
   api.save = function (s) { wr(KEY, s); };
   api.luogo = function (s) { s = s || api.load(); return s.luoghi.filter(function (l) { return l.id === s.attivo; })[0] || null; };
   api.casa = function (s) { s = s || api.load(); return s.luoghi.filter(function (l) { return l.casa; })[0] || null; };
   // Aggiunge un luogo e lo rende attivo. Se casa=true diventa il riferimento standard (l'altra casa perde il flag).
   api.aggiungi = function (s, p, casa) {
-    var id = 'l' + p.lat.toFixed(3) + '_' + p.lon.toFixed(3);
+    p = { nome: p.nome, lat: +(+p.lat).toFixed(2), lon: +(+p.lon).toFixed(2) }; // basta circa 1 km per il meteo: non salvo la posizione esatta
+    var id = 'l' + p.lat.toFixed(2) + '_' + p.lon.toFixed(2);
     s.luoghi = s.luoghi.filter(function (l) { return l.id !== id; });
     if (casa) s.luoghi.forEach(function (l) { l.casa = false; });
     s.luoghi.push({ id: id, nome: p.nome, lat: p.lat, lon: p.lon, casa: !!casa });
@@ -103,7 +105,8 @@
 
   // Ricerca luogo: indirizzi (con numero civico) via Nominatim, nomi di città via Open-Meteo, poi Nominatim come ripiego.
   api.cerca = function (q) {
-    function nom() { return api.getJson('https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=it&q=' + encodeURIComponent(q)).then(function (r) { return r[0] ? { nome: r[0].display_name.split(',').slice(0, 3).join(',').trim(), lat: +r[0].lat, lon: +r[0].lon } : null; }); }
+    function nom() { return api.getJson('https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&accept-language=it&q=' + encodeURIComponent(q)).then(function (r) { if (!r[0]) return null; var a = r[0].address || {}, c = a.city || a.town || a.village || a.municipality; // salvo solo la zona, non via e numero
+      return { nome: c || r[0].display_name.split(',').slice(-4, -2).join(',').trim(), lat: +r[0].lat, lon: +r[0].lon }; }); }
     function om() { return api.getJson('https://geocoding-api.open-meteo.com/v1/search?count=1&language=it&name=' + encodeURIComponent(q)).then(function (j) { var r = j.results && j.results[0]; return r ? { nome: r.name + (r.admin1 ? ', ' + r.admin1 : ''), lat: r.latitude, lon: r.longitude } : null; }); }
     var first = /\d/.test(q) || /,/.test(q) ? nom : om, second = first === nom ? om : nom;
     return first().then(function (r) { return r || second(); });

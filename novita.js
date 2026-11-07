@@ -2,9 +2,9 @@
   // Novità: indicazioni che restano finché non vengono cancellate. Il numero rosso compare sulla scheda e, dove il telefono lo permette, sull'icona.
   var KEY = 'clima.novita.v1', CASA = 'clima.casa.v1';
   function ls() { try { return root.localStorage; } catch (e) { return null; } }
-  function rd(k, d) { try { return JSON.parse(ls().getItem(k)) || d; } catch (e) { return d; } }
+  function rd(k, d) { try { return (root.VAULT ? root.VAULT.get(k) : JSON.parse(ls().getItem(k))) || d; } catch (e) { return d; } }
   function stato() { var s = rd(KEY, {}); return { items: s.items || [], visto: s.visto || {}, chiusi: s.chiusi || [], ultima: s.ultima || null }; }
-  function salva(s) { try { ls().setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+  function salva(s) { try { if (root.VAULT) root.VAULT.set(KEY, s); else ls().setItem(KEY, JSON.stringify(s)); } catch (e) {} }
   function stagione(d) {
     var m = d.getMonth() + 1, g = d.getDate();
     if (m === 11 || m === 12 || m <= 3 || (m === 4 && g <= 15)) return 'inverno';
@@ -47,6 +47,16 @@
     st.items = st.items.concat(nuovi); st.ultima = iso;
     return st;
   }
+  // Avvisi condivisi dall'amministratore (ultimi 14 giorni): compaiono come novità, anche al primo accesso.
+  function unisci(st, lista) {
+    var nuovi = 0;
+    (lista || []).forEach(function (a) {
+      var id = 'avviso-' + a.id;
+      if (st.chiusi.indexOf(id) >= 0 || st.items.some(function (x) { return x.id === id; })) return;
+      st.items.push({ id: id, tipo: 'avviso', titolo: String(a.titolo), testo: String(a.testo), data: a.creato, href: /^[a-z]+\.html$/.test(a.href || '') ? a.href : null, label: 'Apri' }); nuovi++;
+    });
+    return nuovi;
+  }
   function conteggio() { return stato().items.length; }
   function rimuovi(id) { var s = stato(); s.items = s.items.filter(function (x) { return x.id !== id; }); if (s.chiusi.indexOf(id) < 0) s.chiusi.push(id); s.chiusi = s.chiusi.slice(-60); salva(s); badge(); notifica(); }
   function notifica() { try { root.dispatchEvent(new Event('novita')); } catch (e) {} }
@@ -56,10 +66,12 @@
     var fine = function (mkt) {
       var s = stato(), casa = rd(CASA, {});
       s = calcola(s, { now: new Date(), mercato: mkt, consiglio: casa.consiglio }); salva(s); badge(); notifica();
+      var SB = root.SB, tok = SB && SB.tok && SB.tok();
+      if (tok) SB.rpc('avvisi_elenco', { tok: tok }).then(function (l) { var s2 = stato(); if (unisci(s2, l)) { salva(s2); badge(); notifica(); } }).catch(function () {});
     };
     if (typeof fetch !== 'function') return fine(null);
     fetch('data/mercato.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(fine);
   }
-  root.NOVITA = { stato: stato, salva: salva, calcola: calcola, conteggio: conteggio, rimuovi: rimuovi, avvia: avvia, badge: badge, stagione: stagione };
+  root.NOVITA = { stato: stato, salva: salva, calcola: calcola, unisci: unisci, conteggio: conteggio, rimuovi: rimuovi, avvia: avvia, badge: badge, stagione: stagione };
   if (typeof module !== 'undefined') module.exports = root.NOVITA; else avvia();
 })(typeof window !== 'undefined' ? window : globalThis);

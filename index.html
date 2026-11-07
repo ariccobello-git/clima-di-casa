@@ -4,16 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#eef0f8">
-<title>Clima di casa</title>
+<title>Snug Save</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Clima di casa">
+<meta name="apple-mobile-web-app-title" content="Snug Save">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="style.css">
 <script src="supa.js"></script>
+<script src="vault.js"></script>
 <script src="gate.js"></script>
 </head>
 <body>
@@ -34,7 +35,7 @@
   var start = (hasPlace && hasCasa) ? '' : '<section class="card"><b>Prima di iniziare</b><p class="sm">Un minuto per indicare dove sei e com\u2019\u00e8 la tua casa. Senza, vedi solo valori medi.</p><a class="btn" href="setup.html">Completa il Setup</a></section>';
   document.getElementById('app').innerHTML =
     '<div class="hd" style="justify-content:flex-end"><a class="back" href="setup.html" aria-label="Setup">' + U.I('gear') + '</a><a class="back" href="account.html" aria-label="Account">' + U.I('shield') + '</a></div>' +
-    '<div><p>' + new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) + '</p><h1>Clima di casa</h1><p>Scegli la stagione per vedere le temperature da impostare mese per mese.</p></div>' +
+    '<div><p>' + new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) + '</p><h1>Snug Save</h1><p>Scegli la stagione per vedere le temperature da impostare mese per mese.</p></div>' +
     '<div style="height:10px"></div>' + start + '<div id="cons"></div>' +
     sec('w', 'inverno.html', 'snow', 'Inverno', 'Riscaldamento da novembre ad aprile', '<span class="bd">19–20 °C</span><span class="bd">Caldo</span>', now === 'inverno') +
     sec('s', 'estate.html', 'sun', 'Estate', 'Raffrescamento da giugno a settembre', '<span class="bd">26–27 °C</span><span class="bd">Freddo</span>', now === 'estate') +

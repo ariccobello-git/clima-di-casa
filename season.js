@@ -1,12 +1,19 @@
 (function () {
   var S = window.SCHED, U = window.UI, key = window.SEASON, cfg = S.SEASONS[key], emb = key === 'inverno' ? 'snow' : 'sun';
   var today = new Date(), active = S.stagioneOggi(today) === key;
+  // Inverno con la caldaia: termostato ambiente e temperatura dell'acqua dei termosifoni al posto del condizionatore.
+  var sis = (key === 'inverno' && window.ENERGIA && window.ENERGIA.load().fonte === 'gas') ? 'caldaia' : 'split';
   var month = active ? today.getMonth() + 1 : cfg.ordine[0];
   var perche = {
     inverno: [
       ['thermo', 'Temperatura: 19 °C a novembre, marzo e aprile, 20 °C da dicembre a febbraio. Il limite di legge per le case è 20 °C, con 2 °C di tolleranza.'],
       ['clock', 'Orari: acceso la mattina e dalle 17:00 nei giorni lavorativi, tutto il giorno nel weekend. Spento fuori casa e di notte.'],
       ['euro', 'Nei giorni più freddi il condizionatore rende meno, ma resta più economico del gas.']
+    ],
+    caldaia: [
+      ['thermo', 'Temperatura del termostato ambiente: 19 °C a novembre, marzo e aprile, 20 °C da dicembre a febbraio. ENEA ritiene 19 °C sufficienti; il limite di legge è 20 °C con 2 °C di tolleranza.'],
+      ['clock', 'Fuori casa e di notte il termostato si abbassa di 3 °C, ma non scende sotto 16 °C: ENEA consiglia di non scendere sotto 12–13 °C per evitare condense. Riaccendere da molto freddo costa più gas.'],
+      ['flame', 'Temperatura di mandata: con il ritorno sotto 55 °C la caldaia a condensazione recupera calore dai fumi. Più fa freddo fuori, più l’acqua può essere calda, ma conviene stare tra 45 e 60 °C.']
     ],
     estate: [
       ['thermo', 'Temperatura: 26 °C a giugno e settembre, 27 °C a luglio e agosto. Meno di 26 °C fa consumare molto di più e non serve.'],
@@ -23,6 +30,14 @@
       ['bolt', 'Contatore da 3 kW: all’accensione, con forno o piastra in funzione, può scattare. Accendi prima di cucinare.'],
       ['filter', 'Filtri puliti e bocchette libere.']
     ],
+    caldaia: [
+      ['power', 'Il termostato ambiente comanda la caldaia: imposta i gradi indicati e lascia fare a lui.'],
+      ['flame', 'Imposta sulla caldaia la temperatura di mandata consigliata. Se ha la sonda esterna, usa la curva climatica invece del valore fisso (circa 1,0–1,5 per termosifoni). Se la casa si scalda troppo o la caldaia si accende e spegne di continuo, abbassa la mandata di 5 °C.'],
+      ['clock', 'Non alzare il termostato di molto per scaldare prima: l’acqua non scalda più in fretta, la casa supera solo la temperatura voluta.'],
+      ['door', 'Camere poco usate: termostato a 17–18 °C.'],
+      ['window', 'Arieggia 5–10 minuti con finestre spalancate, poi chiudi: meglio di finestre socchiuse a lungo.'],
+      ['filter', 'Caldaia con manutenzione annuale: consuma meno e dura di più.']
+    ],
     estate: [
       ['power', 'Modalità Freddo, ventola in automatico, niente Turbo.'],
       ['window', 'Finestre aperte al mattino presto, persiane chiuse sul lato sole appena entra il caldo.'],
@@ -32,23 +47,23 @@
       ['filter', 'Filtri puliti e unità esterna libera e all’ombra.']
     ]
   };
-  var els = {};
-  function deg(t) { return t === null ? '<span class="deg o">Spento</span>' : '<span class="deg tn">' + t + ' °C</span>'; }
+  var els = {}, perDati = sis === 'caldaia' ? 'caldaia' : key;
+  function deg(t, rid) { return t === null ? '<span class="deg o">Spento</span>' : '<span class="deg' + (rid ? ' o' : ' tn') + '">' + t + ' °C</span>'; }
 
   function card(tipo) {
-    var d = S.MESI[month], list = S.lista(month, tipo), ph = S.phases(month, tipo);
+    var d = S.MESI[month], list = S.lista(month, tipo, sis), ph = S.phases(month, tipo, sis);
     var nowMin = today.getHours() * 60 + today.getMinutes();
     var showNow = active && today.getMonth() + 1 === month && S.tipoOggi(today) === tipo;
-    var cur = showNow ? S.at(month, tipo, nowMin) : null;
+    var cur = showNow ? S.at(month, tipo, nowMin, sis) : null;
     var title = tipo === 'fer' ? 'Giorni lavorativi' : 'Weekend e festivi';
-    var sub = tipo === 'fer' ? (key === 'inverno' ? 'In casa la mattina e dalle 17:00' : 'In casa dalle 17:00') : 'In casa tutto il giorno';
+    var sub = sis === 'caldaia' ? (tipo === 'fer' ? 'Termostato: ' + 'acceso 45 minuti prima di rientrare' : 'Termostato alto tutto il giorno') : tipo === 'fer' ? (key === 'inverno' ? 'In casa la mattina e dalle 17:00' : 'In casa dalle 17:00') : 'In casa tutto il giorno';
     var h = '<header><div><h3>' + title + '</h3><span>' + sub + '</span></div></header>';
-    h += '<div class="bar">' + ph.map(function (p) { return '<i class="' + (p.temp === null ? 'off' : 'on') + '" style="width:' + ((p.to - p.from) / 14.4) + '%"></i>'; }).join('');
+    h += '<div class="bar">' + ph.map(function (p) { return '<i class="' + (p.temp === null || p.rid ? 'off' : 'on') + '" style="width:' + ((p.to - p.from) / 14.4) + '%"></i>'; }).join('');
     if (showNow) h += '<span class="mark" style="left:' + (nowMin / 14.4) + '%"></span>';
     h += '</div><div class="ticks" aria-hidden="true"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>';
     h += '<ul class="rows">' + list.map(function (r) {
       var isCur = cur && cur.label === r.label && (r.from < r.to ? (nowMin >= r.from && nowMin < r.to) : (nowMin >= r.from || nowMin < r.to));
-      return '<li class="' + (r.temp !== null ? 'is' : '') + (isCur ? ' cur' : '') + '"><span class="sw"></span><span><strong>' + r.label + '</strong><span class="wh tn">' + S.fmt(r.from) + ' – ' + S.fmt(r.to) + '</span><span class="wh">' + r.hint + '</span></span>' + deg(r.temp) + '</li>';
+      return '<li class="' + (r.temp !== null && !r.rid ? 'is' : '') + (isCur ? ' cur' : '') + '"><span class="sw"></span><span><strong>' + r.label + '</strong><span class="wh tn">' + S.fmt(r.from) + ' – ' + S.fmt(r.to) + '</span><span class="wh">' + r.hint + '</span></span>' + deg(r.temp, r.rid) + '</li>';
     }).join('') + '</ul>';
     if (d.nota && tipo === 'fer') h += '<p class="note">' + d.nota + '</p>';
     els[tipo].innerHTML = h;
@@ -62,16 +77,18 @@
   function hero() {
     var d = S.MESI[month], verb = cfg.modo, t = S.setPoint(month);
     els.hero.className = 'hero';
-    els.hero.innerHTML = '<div style="min-width:0"><small>Temperatura di ' + d.nome + '</small><span class="big tn">' + (t === null ? 'Spento' : t + ' °C') + '</span><span class="amt">Modalità ' + verb + ' · media del mese ' + String(d.media).replace('.', ',') + ' °C</span>' + fonteBadge() + '</div><div class="wm">' + U.I(emb) + '</div>';
+    var te = d.media; if (info && info.live && month === today.getMonth() + 1 && info.live.giorni[0]) te = info.live.giorni[0].mean;
+    var riga = sis === 'caldaia' ? 'Termostato ambiente' + (t === null ? ' · non serve scaldare' : ' · mandata caldaia circa ' + S.mandata(te) + ' °C') : 'Modalità ' + verb + ' · media del mese ' + String(d.media).replace('.', ',') + ' °C';
+    els.hero.innerHTML = '<div style="min-width:0"><small>' + (sis === 'caldaia' ? 'Termostato di ' : 'Temperatura di ') + d.nome + '</small><span class="big tn">' + (t === null ? 'Spento' : t + ' °C') + '</span><span class="amt">' + riga + '</span>' + fonteBadge() + '</div><div class="wm">' + U.I(emb) + '</div>';
   }
 
   function nowCard() {
     var el = els.now;
     if (!active) { el.style.display = 'none'; return; }
     var tipo = S.tipoOggi(today), m = today.getMonth() + 1;
-    var p = S.at(m, tipo, today.getHours() * 60 + today.getMinutes());
+    var p = S.at(m, tipo, today.getHours() * 60 + today.getMinutes(), sis);
     el.style.display = '';
-    el.innerHTML = (p.temp === null ? '<div class="nw off">Spento</div>' : '<div class="nw tn">' + p.temp + ' °C</div>') +
+    el.innerHTML = (p.temp === null ? '<div class="nw off">Spento</div>' : '<div class="nw' + (p.rid ? ' off' : ' tn') + '">' + p.temp + ' °C</div>') +
       '<div><b>Adesso · ' + p.label + '</b><small>' + p.hint + '. ' + (tipo === 'we' ? 'Oggi è weekend.' : 'Oggi è un giorno lavorativo.') + ' Se è festivo, guarda il riquadro Weekend.</small></div>';
   }
 
@@ -111,15 +128,15 @@
     var other = key === 'inverno' ? ['estate.html', 'Stagione estate', 'sun'] : ['inverno.html', 'Stagione inverno', 'snow'];
     main.innerHTML =
       '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a><span class="emb" aria-hidden="true">' + U.I(emb) + '</span></div>' +
-      '<div><h1>' + cfg.nome + '</h1><p>Scegli il mese. Accendi il condizionatore (modalità ' + cfg.modo + ') solo quando sei in casa. Spegnilo quando esci e di notte.</p></div>' +
+      '<div><h1>' + cfg.nome + '</h1><p>' + (sis === 'caldaia' ? 'Scegli il mese. Imposta il termostato ambiente: la caldaia parte da sola solo quando serve.' : 'Scegli il mese. Accendi il condizionatore (modalità ' + cfg.modo + ') solo quando sei in casa. Spegnilo quando esci e di notte.') + '</p></div>' +
       '<div class="chips" id="chips" role="group" aria-label="Mese"></div>' +
       '<div id="hero"></div><div id="cons"></div><div class="al" id="meteo"></div><div id="fonte"></div><div class="al" id="now" aria-live="polite"></div>' +
       '<section class="card" id="fer"></section><section class="card" id="we"></section>' +
-      '<h2>Perché questi valori</h2><section class="card"><ul class="rules">' + perche[key].map(function (r) { return '<li>' + U.I(r[0]) + '<span>' + r[1] + '</span></li>'; }).join('') + '</ul></section>' +
-      '<h2>Per farlo bene</h2><section class="card"><ul class="rules">' + regole[key].map(function (r) { return '<li>' + U.I(r[0]) + '<span>' + r[1] + '</span></li>'; }).join('') + '</ul></section>' +
+      '<h2>Perché questi valori</h2><section class="card"><ul class="rules">' + perche[perDati].map(function (r) { return '<li>' + U.I(r[0]) + '<span>' + r[1] + '</span></li>'; }).join('') + '</ul></section>' +
+      '<h2>Per farlo bene</h2><section class="card"><ul class="rules">' + regole[perDati].map(function (r) { return '<li>' + U.I(r[0]) + '<span>' + r[1] + '</span></li>'; }).join('') + '</ul></section>' +
       '<div class="cmds"><a class="cm" href="consigli.html"><i class="ab">' + U.I('bulb') + '</i><b>Consigli di risparmio</b><small>Come spendere il meno possibile</small></a>' +
       (key === 'inverno' ? '<a class="cm" href="spiegazione.html"><i class="ab">' + U.I('bolt') + '</i><b>Perché elettrico e non gas</b><small>Costi a confronto</small></a>' : '<a class="cm" href="' + other[0] + '"><i class="ab">' + U.I(other[2]) + '</i><b>' + other[1] + '</b><small>Temperature da novembre ad aprile</small></a>') + '</div>' +
-      '<p class="sm" style="text-align:center;margin-top:8px">Valori indicativi per un appartamento a Roma.</p>';
+      '<p class="sm" style="text-align:center;margin-top:8px">Valori indicativi per un appartamento a Roma.' + (sis === 'caldaia' ? ' La mandata consigliata è una stima: se la tua caldaia ha una curva climatica, vale quella dell’installatore.' : '') + '</p>';
     els.chips = document.getElementById('chips'); els.hero = document.getElementById('hero'); els.now = document.getElementById('now'); els.meteo = document.getElementById('meteo'); els.fonte = document.getElementById('fonte'); els.cons = document.getElementById('cons'); els.fer = document.getElementById('fer'); els.we = document.getElementById('we');
     chips();
     els.chips.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; month = +b.getAttribute('data-m'); paint(); });

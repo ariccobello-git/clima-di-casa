@@ -1,6 +1,6 @@
 (function () {
   var SB = window.SB, U = window.UI, app = document.getElementById('app');
-  var me = SB.me() || { nome: '', admin: false }, users = null, st = { msg: '', bad: false, open: null, nuova: null, conf: null, add: { nome: '', tel: '+39 ', pwd: '' } };
+  var me = SB.me() || { nome: '', admin: false }, users = null, st = { msg: '', bad: false, open: null, nuova: null, conf: null, add: { nome: '', tel: '+39 ', pwd: '' }, av: { t: '', x: '' }, avm: '' };
   function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function gen() { var a = new Uint32Array(1); (window.crypto || window.msCrypto).getRandomValues(a); return String(a[0] % 1000000).padStart(6, '0'); }
   function say(t, bad) { st.msg = t; st.bad = !!bad; render(); }
@@ -15,7 +15,7 @@
         '<span class="rw">' + (u.bloccato ? '<button class="chip" data-a="sblocca" data-id="' + u.id + '">Sblocca</button>' : '') +
         '<button class="chip" data-a="pwd" data-id="' + u.id + '">Nuova password</button><button class="chip" data-a="tel" data-id="' + u.id + '">Telefono</button>' +
         (u.nome === me.nome ? '' : '<button class="chip" data-a="del" data-id="' + u.id + '">' + (st.conf === u.id ? 'Conferma elimina' : 'Elimina') + '</button>') + '</span>';
-      if (st.nuova && st.nuova.id === u.id) h += '<div style="flex-basis:100%"><p class="ok">Nuova password di ' + esc(u.nome) + ': <span class="cd">' + esc(st.nuova.p) + '</span><br><span class="wh">Comunicala all’utente. Non verrà più mostrata.</span></p></div>';
+      if (st.nuova && st.nuova.id === u.id) h += '<div style="flex-basis:100%"><p class="ok">Nuova password di ' + esc(u.nome) + ': <span class="cd">' + esc(st.nuova.p) + '</span><br><span class="wh">Comunicala all’utente. Non verrà più mostrata. Con una nuova password i dati personali salvati sul suo telefono (casa, indirizzo, prezzi) vanno reinseriti.</span></p></div>';
       if (st.open === u.id) h += '<div style="flex-basis:100%"><input class="in" id="nt" type="tel" value="' + esc(u.telefono) + '" aria-label="Telefono"><button class="btn sm2" data-a="savetel" data-id="' + u.id + '">Salva numero</button></div>';
       return h + '</li>';
     }).join('') + '</ul>';
@@ -29,6 +29,7 @@
       '<section class="card"><b>Aggiorna l\u2019app</b><p class="sm">Se non vedi le novit\u00e0, tocca qui. Funziona anche dall\u2019icona sulla Home. In alternativa tira gi\u00f9 dalla cima di una pagina.</p><button class="btn sec2" data-a="upd">Aggiorna ora</button></section>';
     if (me.admin) {
       h += '<h2>Utenti</h2><section class="card">' + msg() + lista() + '</section>' +
+        '<h2>Avviso a tutti</h2><section class="card"><input class="in" id="avt" placeholder="Titolo" maxlength="80" value="' + esc(st.av.t) + '" aria-label="Titolo"><textarea class="in" id="avx" rows="3" maxlength="400" placeholder="Testo dell\u2019avviso" aria-label="Testo" style="resize:vertical">' + esc(st.av.x) + '</textarea>' + (st.avm ? '<p class="ok" role="status">' + esc(st.avm) + '</p>' : '') + '<button class="btn" data-a="avviso">Invia a tutti</button><p class="sm">Compare nella pagina Novità di ogni utente, con il numero rosso.</p></section>' +
         '<h2>Nuovo utente</h2><section class="card"><input class="in" id="an" placeholder="Nome" value="' + esc(st.add.nome) + '" aria-label="Nome" maxlength="30">' +
         '<input class="in" id="at" type="tel" placeholder="Telefono" value="' + esc(st.add.tel) + '" aria-label="Telefono">' +
         '<input class="in pin" id="ap" type="text" inputmode="numeric" maxlength="6" placeholder="Password" value="' + esc(st.add.pwd) + '" aria-label="Password"><button class="btn sec2" data-a="gen">Genera password</button>' +
@@ -45,12 +46,20 @@
     var b = e.target.closest('button'); if (!b || !b.hasAttribute('data-a')) return;
     var a = b.getAttribute('data-a'), id = b.getAttribute('data-id') && +b.getAttribute('data-id');
     if (me.admin && document.getElementById('an')) st.add = { nome: document.getElementById('an').value, tel: document.getElementById('at').value, pwd: document.getElementById('ap').value };
+    if (me.admin && document.getElementById('avt')) st.av = { t: document.getElementById('avt').value, x: document.getElementById('avx').value };
     if (a === 'upd') { SB.aggiorna(); return; }
+    if (a === 'avviso') {
+      if (!st.av.t.trim() || !st.av.x.trim()) { st.avm = ''; return say('Scrivi titolo e testo dell\u2019avviso.', true); }
+      SB.rpc('admin_avviso', { tok: tok(), p_chiave: 'manuale-' + Date.now() + '-' + gen(), p_titolo: st.av.t, p_testo: st.av.x, p_href: null }).then(function (r) {
+        if (r && r.ok) { st.av = { t: '', x: '' }; st.avm = 'Avviso inviato a tutti.'; st.msg = ''; render(); } else say('Avviso non inviato.', true);
+      }).catch(function () { say('Collegamento non riuscito.', true); });
+      return;
+    }
     if (a === 'out') { SB.rpc('esci', { tok: tok() }).catch(function () {}).then(function () { SB.clear(); location.replace('accesso.html'); }); return; }
     if (a === 'chg') {
       var o = document.getElementById('old').value, n = document.getElementById('new').value;
       if (!/^\d{6}$/.test(n)) return say(E.formato, true);
-      SB.rpc('cambia_password', { tok: tok(), vecchia: o, nuova: n }).then(function (r) { r.ok ? say('Password cambiata.') : say(E[r.errore] || 'Errore.', true); }).catch(function () { say('Collegamento non riuscito.', true); });
+      SB.rpc('cambia_password', { tok: tok(), vecchia: o, nuova: n }).then(function (r) { if (r.ok) window.VAULT.rewrap(me.nome, n).then(function () { say('Password cambiata.'); }); else say(E[r.errore] || 'Errore.', true); }).catch(function () { say('Collegamento non riuscito.', true); });
     } else if (a === 'gen') { st.add.pwd = gen(); render(); }
     else if (a === 'add') {
       var d = st.add; SB.rpc('admin_crea', { tok: tok(), p_nome: d.nome, p_pwd: d.pwd, p_tel: SB.norm(d.tel) }).then(function (r) {

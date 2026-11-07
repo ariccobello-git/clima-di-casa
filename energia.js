@@ -9,8 +9,8 @@
   var INV = [11, 12, 1, 2, 3, 4], GIORNI = { 11: 30, 12: 31, 1: 31, 2: 28, 3: 31, 4: 15 };
 
   function ls() { try { return root.localStorage; } catch (e) { return null; } }
-  function load() { var o = {}, s = {}; try { s = JSON.parse(ls().getItem(KEY)) || {}; } catch (e) {} for (var k in DEF) o[k] = s[k] !== undefined ? s[k] : DEF[k]; return o; }
-  function save(s) { try { ls().setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+  function load() { var o = {}, s = {}; try { s = (root.VAULT ? root.VAULT.get(KEY) : JSON.parse(ls().getItem(KEY))) || {}; } catch (e) {} for (var k in DEF) o[k] = s[k] !== undefined ? s[k] : DEF[k]; return o; }
+  function save(s) { try { if (root.VAULT) root.VAULT.set(KEY, s); else ls().setItem(KEY, JSON.stringify(s)); } catch (e) {} }
 
   function annoEff(c) { var a = +c.anno, r = +c.ristr; return (r && r > a) ? a + 0.6 * (r - a) : a; }
   function eph(c) { var y = annoEff(c); for (var i = 0; i < EPOCHE.length; i++) if (y <= EPOCHE[i][0]) return EPOCHE[i][1]; return 40; }
@@ -84,7 +84,7 @@
     st.consiglio = v.cambia ? { verso: v.verso, mese: m, risparmio: Math.round(v.risparmio), data: st.ultimaVerifica } : null;
     return st;
   }
-  function prezzi(st, mkt) { return { luce: st.luce > 0 ? st.luce : (mkt && mkt.luce) || 0.2807, gas: st.gas > 0 ? st.gas : (mkt && mkt.gas) || 1.357 }; }
+  function prezzi(st, mkt) { return { luce: st.luce > 0 ? st.luce : (mkt && mkt.luce) || 0.297, gas: st.gas > 0 ? st.gas : (mkt && mkt.gas) || 1.339 }; }
   function mercato() { return fetch('data/mercato.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).catch(function () { return null; }); }
 
   function etichetta(f) { return f === 'gas' ? { sym: 'G', nome: 'Gas metano', icon: 'flame' } : { sym: 'E', nome: 'Elettrica', icon: 'bolt' }; }

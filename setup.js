@@ -34,8 +34,8 @@
       '<label class="fld" for="gas">Gas del riscaldamento in un anno, in Smc (facoltativo)</label><input class="in" id="gas" type="number" inputmode="decimal" placeholder="lo trovi in bolletta" value="' + v(c.gasSmc) + '"><p class="hint">Smc sono i metri cubi di gas che trovi in bolletta. Se lo conosci, i calcoli partono dal tuo consumo reale. Conta solo il riscaldamento: se hai solo il totale annuo, togli circa 150 Smc per acqua calda e cucina.</p>' +
       '<p class="ok" id="sv" role="status"></p><div id="esito">' + esito(c) + '</div></section>';
     h += '<h2>Prezzi dell’energia</h2><section class="card"><p class="sm">Prezzi tutto compreso, imposte incluse. Lascia vuoto per usare quelli di mercato' + (mkt ? ' (aggiornati al ' + esc(mkt.aggiornato) + ': luce ' + mkt.luce.toLocaleString('it-IT') + ' €/kWh, gas ' + mkt.gas.toLocaleString('it-IT') + ' €/Smc)' : '') + '.</p>' +
-      '<label class="fld" for="luce">Luce (€/kWh)</label><input class="in" id="luce" type="number" inputmode="decimal" step="0.0001" placeholder="per esempio 0,28" value="' + v(c.luce) + '">' +
-      '<label class="fld" for="gasp">Gas (€/Smc)</label><input class="in" id="gasp" type="number" inputmode="decimal" step="0.001" placeholder="per esempio 1,36" value="' + v(c.gas) + '">' +
+      '<label class="fld" for="luce">Luce (€/kWh)</label><input class="in" id="luce" type="number" inputmode="decimal" step="0.0001" placeholder="per esempio 0,30" value="' + v(c.luce) + '">' +
+      '<label class="fld" for="gasp">Gas (€/Smc)</label><input class="in" id="gasp" type="number" inputmode="decimal" step="0.001" placeholder="per esempio 1,34" value="' + v(c.gas) + '">' +
       '<a class="btn sec2" href="energia.html">Vedi il consiglio elettrico o gas</a></section>';
     app.innerHTML = h; U.applyHue(235); U.nav('home');
   }

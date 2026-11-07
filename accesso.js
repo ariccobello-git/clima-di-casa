@@ -7,7 +7,7 @@
   var ERR = { credenziali: 'Nome o password non corretti.', bloccato: 'Account bloccato. Chiedi all’amministratore di sbloccarlo.', codice: 'Codice o numero non corretti, oppure codice scaduto.', formato: 'La password deve avere 6 cifre.' };
 
   function render() {
-    var h = '<div><h1>Clima di casa</h1><p>Scegli il tuo nome e inserisci la password di 6 cifre.</p></div>';
+    var h = '<div><h1>Snug Save</h1><p>Scegli il tuo nome e inserisci la password di 6 cifre.</p></div>';
     if (st.nomi === null) h += '<section class="card"><p class="sm">Carico…</p>' + m() + '</section>';
     else if (st.v === 'login') {
       h += '<section class="card"><div class="chips wrap" role="group" aria-label="Nome">' + st.nomi.map(function (n) { return '<button type="button" class="chip u" data-nome="' + esc(n) + '" aria-pressed="' + (n === st.nome) + '">' + esc(n) + '</button>'; }).join('') + '</div>' +
@@ -37,7 +37,11 @@
       if (!/^\d{6}$/.test(p)) return say('La password ha 6 cifre.', true);
       st.busy = true; st.msg = ''; render();
       SB.rpc('accedi', { p_nome: st.nome, p_pwd: p }).then(function (r) {
-        if (r.token) { SB.set(r.token, r.nome, r.admin); location.replace('index.html'); }
+        if (r.token) {
+          SB.set(r.token, r.nome, r.admin);
+          window.VAULT.unlock(r.nome, p).then(function () { location.replace('index.html'); })
+            .catch(function () { SB.clear(); say('Questo browser non supporta la protezione dei dati. Aggiorna Safari.', true); });
+        }
         else say((ERR[r.errore] || 'Errore.') + (r.restanti != null ? ' Tentativi rimasti: ' + r.restanti + '.' : ''), true);
       }).catch(function () { say('Collegamento non riuscito. Riprova.', true); });
     } else if (b.id === 'forgot') { if (!st.nome) return say('Prima scegli il tuo nome.', true); st.v = 'r1'; st.msg = ''; render(); }

@@ -112,8 +112,9 @@
     return first().then(function (r) { return r || second(); });
   };
   api.nomeDa = function (lat, lon) {
-    return api.getJson('https://nominatim.openstreetmap.org/reverse?format=json&zoom=14&accept-language=it&lat=' + lat + '&lon=' + lon).then(function (r) {
-      var a = r.address || {}; return a.city || a.town || a.village || a.municipality || 'Posizione attuale';
+    return api.getJson('https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&addressdetails=1&accept-language=it&lat=' + lat + '&lon=' + lon).then(function (r) {
+      var a = r.address || {}, c = a.city || a.town || a.village || a.municipality, z = a.quarter || a.suburb || a.neighbourhood || a.city_district || a.hamlet; // quartiere + città, senza via e numero
+      return z && c && z !== c ? z + ', ' + c : (c || z || 'Posizione attuale');
     }).catch(function () { return 'Posizione attuale'; });
   };
   root.CLIMA = api;

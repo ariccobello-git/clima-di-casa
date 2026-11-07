@@ -44,6 +44,7 @@
     var b = e.target.closest('button'); if (!b || !b.hasAttribute('data-a')) return;
     var a = b.getAttribute('data-a'), id = b.getAttribute('data-id') && +b.getAttribute('data-id');
     if (me.admin && document.getElementById('an')) st.add = { nome: document.getElementById('an').value, tel: document.getElementById('at').value, pwd: document.getElementById('ap').value };
+    if (a === 'upd') { SB.aggiorna(); return; }
     if (a === 'out') { SB.rpc('esci', { tok: tok() }).catch(function () {}).then(function () { SB.clear(); location.replace('accesso.html'); }); return; }
     if (a === 'chg') {
       var o = document.getElementById('old').value, n = document.getElementById('new').value;

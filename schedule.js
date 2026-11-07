@@ -17,6 +17,7 @@
     8:  { nome: 'Agosto',   corto: 'Ago', s: 'estate',  media: 25.5, t: 27, nota: 'È il mese più caldo: tieni le persiane chiuse sul lato sole.' },
     9:  { nome: 'Settembre', corto: 'Set', s: 'estate', media: 21.4, t: 26, nota: 'Con più umidità prova la modalità Deumidifica.' }
   };
+  var ov = {}; // set point calcolati col meteo: mese -> gradi (null = non serve)
   var P = { gas: 1.357, luce: 0.2807, kwhPerSmc: 11.109, eff: 0.9, caldo: 3000 };
 
   function fmt(m) { m = m % 1440; var h = Math.floor(m / 60), mm = m % 60; return (h < 10 ? '0' : '') + h + ':' + (mm < 10 ? '0' : '') + mm; }
@@ -25,7 +26,7 @@
 
   // Fasce da mezzanotte a mezzanotte (temp null = spento).
   function phases(month, tipo) {
-    var d = MESI[month], t = d.t;
+    var d = MESI[month], t = (month in ov) ? ov[month] : d.t;
     if (d.s === 'inverno') {
       if (tipo === 'we') return [
         { from: 0, to: 450, label: 'Notte', temp: null, hint: 'Spento mentre dormi' },
@@ -84,7 +85,7 @@
     return { gas: costoGasKwh() * P.caldo, pompa: kwhEl * P.luce, kwhEl: kwhEl };
   }
 
-  root.SCHED = { SEASONS: SEASONS, MESI: MESI, P: P, fmt: fmt, phases: phases, lista: lista, at: at,
+  root.SCHED = { ov: ov, setPoint: function (m) { return (m in ov) ? ov[m] : MESI[m].t; }, SEASONS: SEASONS, MESI: MESI, P: P, fmt: fmt, phases: phases, lista: lista, at: at,
     stagioneOggi: stagioneOggi, tipoOggi: tipoOggi, costoGasKwh: costoGasKwh, costoPompaKwh: costoPompaKwh, pareggio: pareggio, annuale: annuale };
   if (typeof module !== 'undefined') module.exports = root.SCHED;
 })(typeof window !== 'undefined' ? window : globalThis);

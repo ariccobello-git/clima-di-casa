@@ -10,23 +10,27 @@
     t = String(t || '').replace(/[^0-9+]/g, ''); if (t.indexOf('00') === 0) t = '+' + t.slice(2);
     if (t.charAt(0) !== '+') t = '+39' + t.replace(/^0+(?=3)/, ''); return t;
   }
-  // La sessione resta in due posti (localStorage e cookie di un anno): se iOS ne svuota uno, l'altro la ripristina.
-  function ck(k) { var m = document.cookie.match(new RegExp('(?:^|; )' + k + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : null; }
-  function ckSet(k, v) { document.cookie = k + '=' + (v === null ? '' : encodeURIComponent(v)) + '; path=/; max-age=' + (v === null ? 0 : 31536000) + '; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : ''); }
-  function get(k) { var s = ls(), v = null; try { v = s && s.getItem(k); } catch (e) {} if (v === null || v === undefined) { v = ck(k.replace('.', '_')); if (v && s) { try { s.setItem(k, v); } catch (e) {} } } return v; }
-  function put(k, v) { var s = ls(); try { if (s) { v === null ? s.removeItem(k) : s.setItem(k, v); } } catch (e) {} ckSet(k.replace('.', '_'), v); }
+  // L'accesso vale solo finché usi l'app: se esci dall'app o chiudi la pagina per più di GRACE secondi, va rifatto.
+  var GRACE = 20;
+  function ss() { try { return window.sessionStorage; } catch (e) { return null; } }
+  // Pulizia di vecchi accessi salvati in modo permanente.
+  try { localStorage.removeItem('clima.tok'); localStorage.removeItem('clima.me'); ['clima_tok', 'clima_me'].forEach(function (k) { document.cookie = k + '=; path=/; max-age=0'; }); } catch (e) {}
   function aggiorna() {
     var p = (window.caches && caches.keys) ? caches.keys().then(function (k) { return Promise.all(k.map(function (x) { return caches.delete(x); })); }) : Promise.resolve();
     p.catch(function () {}).then(function () { location.replace(location.pathname + '?r=' + Date.now()); });
   }
   window.SB = {
     rpc: rpc, norm: norm, aggiorna: aggiorna,
-    tok: function () { return get('clima.tok'); },
-    me: function () { try { return JSON.parse(get('clima.me')); } catch (e) { return null; } },
-    set: function (tok, nome, admin) { put('clima.tok', tok); put('clima.me', JSON.stringify({ nome: nome, admin: !!admin })); },
-    clear: function () { put('clima.tok', null); put('clima.me', null); }
+    tok: function () {
+      var s = ss(), t = s && s.getItem('clima.tok'); if (!t) return null;
+      if (Date.now() - (+s.getItem('clima.seen') || 0) > GRACE * 1000) { window.SB.clear(); return null; }
+      return t;
+    },
+    touch: function () { var s = ss(); try { if (s && s.getItem('clima.tok')) s.setItem('clima.seen', String(Date.now())); } catch (e) {} },
+    me: function () { try { return JSON.parse(ss().getItem('clima.me')); } catch (e) { return null; } },
+    set: function (tok, nome, admin) { var s = ss(); try { if (s) { s.setItem('clima.tok', tok); s.setItem('clima.me', JSON.stringify({ nome: nome, admin: !!admin })); s.setItem('clima.seen', String(Date.now())); } } catch (e) {} },
+    clear: function () { var s = ss(); try { if (s) ['clima.tok', 'clima.me', 'clima.seen'].forEach(function (k) { s.removeItem(k); }); } catch (e) {} }
   };
-  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 
   // Nell'app sulla Home non c'è "tira per aggiornare": lo aggiungo io.
   var standalone = window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);

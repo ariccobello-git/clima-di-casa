@@ -26,8 +26,7 @@
     h += '<section class="card"><b>Cambia password</b><input class="in pin" id="old" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="Attuale" aria-label="Password attuale">' +
       '<input class="in pin" id="new" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="Nuova" aria-label="Nuova password">' + (me.admin ? '' : msg()) +
       '<button class="btn" data-a="chg">Cambia password</button><button class="btn sec2" data-a="out">Esci</button></section>' +
-      '<section class="card"><b>Aggiorna l\u2019app</b><p class="sm">Se non vedi le novit\u00e0, tocca qui. Funziona anche dall\u2019icona sulla Home. In alternativa tira gi\u00f9 dalla cima di una pagina.</p><button class="btn sec2" data-a="upd">Aggiorna ora</button>' +
-      '<p class="sm">Sessione salvata: ' + (SB.tok() ? 's\u00ec' : 'no') + ' \u00b7 ' + (window.navigator.standalone ? 'app dalla Home' : 'browser') + '</p></section>';
+      '<section class="card"><b>Aggiorna l\u2019app</b><p class="sm">Se non vedi le novit\u00e0, tocca qui. Funziona anche dall\u2019icona sulla Home. In alternativa tira gi\u00f9 dalla cima di una pagina.</p><button class="btn sec2" data-a="upd">Aggiorna ora</button></section>';
     if (me.admin) {
       h += '<h2>Utenti</h2><section class="card">' + msg() + lista() + '</section>' +
         '<h2>Nuovo utente</h2><section class="card"><input class="in" id="an" placeholder="Nome" value="' + esc(st.add.nome) + '" aria-label="Nome" maxlength="30">' +

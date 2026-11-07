@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef0f8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Clima di casa">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Guida al reset password</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app"></main>
+<script src="schedule.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  var U = window.UI;
+  function list(a) { return '<ul class="rules">' + a.map(function (r) { return '<li>' + U.I(r[0]) + '<span>' + r[1] + '</span></li>'; }).join('') + '</ul>'; }
+  function step(n, t, d) { return '<li><span class="sw tn" style="flex:none!important;width:22px;font-weight:800;color:var(--pri)">' + n + '</span><span><strong>' + t + '</strong><span class="wh" style="display:block;color:var(--mu);font-size:14px">' + d + '</span></span></li>'; }
+  U.applyHue(235);
+  document.getElementById('app').innerHTML =
+    '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div>' +
+    '<div><h1>Reset password</h1><p>Come recuperare l’accesso, per l’utente e per l’amministratore.</p></div>' +
+    '<h2>Se sei un utente</h2><section class="card"><ol class="lst" style="list-style:none;padding:0;margin:0">' +
+      step(1, 'Apri “Password dimenticata”', 'Nella pagina di accesso, sotto il campo della password.') +
+      step(2, 'Scrivi il tuo numero', 'Il prefisso +39 è già inserito. Usa lo stesso numero che hai dato all’amministratore.') +
+      step(3, 'Aspetta il codice su WhatsApp', 'Sono 6 cifre e valgono pochi minuti. Se non arriva, attendi un minuto e chiedilo di nuovo.') +
+      step(4, 'Scegli la nuova password', 'Sempre di 6 cifre. Poi accedi con il tuo nome e la nuova password.') +
+    '</ol></section>' +
+    '<h2>Se non funziona</h2><section class="card">' + list([
+      ['shield', 'Il numero deve essere identico a quello registrato. Se è diverso, o l’hai cambiato, il codice non parte e non ti viene detto il perché: scrivi all’amministratore.'],
+      ['clock', 'Dopo alcuni tentativi sbagliati l’account si blocca. Solo l’amministratore può sbloccarlo.'],
+      ['power', 'Un codice usato o scaduto non vale più: chiedine uno nuovo.']
+    ]) + '</section>' +
+    '<h2>Se sei l’amministratore</h2><section class="card"><ol class="lst" style="list-style:none;padding:0;margin:0">' +
+      step(1, 'Apri il pannello admin', 'Elenco degli utenti con stato: attivo o bloccato.') +
+      step(2, 'Sblocca l’account', 'Azzera i tentativi sbagliati senza cambiare la password.') +
+      step(3, 'Genera una nuova password', 'Il sistema crea 6 cifre nuove e le mostra una sola volta. Comunicale all’utente.') +
+      step(4, 'Correggi il numero di telefono', 'Se l’utente ha cambiato numero, aggiornalo: da quel momento vale per il reset.') +
+    '</ol><p class="sm">Le password sono cifrate: nessuno può leggerle, nemmeno tu. Si possono solo sostituire.</p></section>' +
+    '<div class="cmds"><a class="cm" href="index.html"><i class="ab">' + U.I('home') + '</i><b>Torna alle stagioni</b><small>Temperature mese per mese</small></a></div>';
+  U.nav('home');
+})();
+</script>
+</body>
+</html>

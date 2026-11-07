@@ -88,7 +88,9 @@
     else if (st.fonte === 'storico') h += 'Medie del ' + info.anno + ' · stile ' + C.STILI[st.stile].nome + '.';
     else h += 'Previsioni di oggi, ora ' + Math.round(info.live.adesso) + ' °C fuori · stile ' + C.STILI[st.stile].nome + '.';
     var mo = info && info.motivi[month]; if (mo && (st.fonte === 'storico' || month === today.getMonth() + 1)) h += ' ' + mo;
-    els.meteo.innerHTML = h + '</small></div><a class="back" href="meteo.html">Cambia</a>';
+    els.meteo.innerHTML = h + '</small></div><a class="back" href="meteo.html">Luogo</a>';
+    var f = [['nessuno', 'Standard'], ['live', 'Meteo live'], ['storico', 'Anno ' + C.annoScorso()]];
+    els.fonte.innerHTML = '<div class="seg" role="group" aria-label="Fonte dati">' + f.map(function (x) { return '<button type="button" data-fonte="' + x[0] + '" aria-pressed="' + (x[0] === st.fonte) + '">' + x[1] + '</button>'; }).join('') + '</div>';
   }
   function paint() {
     U.applyHue(U.hueFor(S.MESI[month].media));
@@ -96,6 +98,10 @@
     hero(); nowCard(); card('fer'); card('we'); if (window.CLIMA) banner();
   }
 
+  function aggiorna() {
+    info = null; errore = false; paint();
+    window.CLIMA.applica(S).then(function (i) { info = i; paint(); }).catch(function () { errore = true; paint(); });
+  }
   function build() {
     var main = document.getElementById('app');
     var other = key === 'inverno' ? ['estate.html', 'Stagione estate', 'sun'] : ['inverno.html', 'Stagione inverno', 'snow'];
@@ -103,18 +109,26 @@
       '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a><span class="emb" aria-hidden="true">' + U.I(emb) + '</span></div>' +
       '<div><h1>' + cfg.nome + '</h1><p>Scegli il mese. Accendi il condizionatore (modalità ' + cfg.modo + ') solo quando sei in casa. Spegnilo quando esci e di notte.</p></div>' +
       '<div class="chips" id="chips" role="group" aria-label="Mese"></div>' +
-      '<div id="hero"></div><div class="al" id="meteo"></div><div class="al" id="now" aria-live="polite"></div>' +
+      '<div id="hero"></div><div class="al" id="meteo"></div><div id="fonte"></div><div class="al" id="now" aria-live="polite"></div>' +
       '<section class="card" id="fer"></section><section class="card" id="we"></section>' +
       '<h2>Perché questi valori</h2><section class="card"><ul class="rules">' + perche[key].map(function (r) { return '<li>' + U.I(r[0]) + '<span>' + r[1] + '</span></li>'; }).join('') + '</ul></section>' +
       '<h2>Per farlo bene</h2><section class="card"><ul class="rules">' + regole[key].map(function (r) { return '<li>' + U.I(r[0]) + '<span>' + r[1] + '</span></li>'; }).join('') + '</ul></section>' +
       '<div class="cmds"><a class="cm" href="consigli.html"><i class="ab">' + U.I('bulb') + '</i><b>Consigli di risparmio</b><small>Come spendere il meno possibile</small></a>' +
       (key === 'inverno' ? '<a class="cm" href="spiegazione.html"><i class="ab">' + U.I('bolt') + '</i><b>Perché elettrico e non gas</b><small>Costi a confronto</small></a>' : '<a class="cm" href="' + other[0] + '"><i class="ab">' + U.I(other[2]) + '</i><b>' + other[1] + '</b><small>Temperature da novembre ad aprile</small></a>') + '</div>' +
       '<p class="sm" style="text-align:center;margin-top:8px">Valori indicativi per un appartamento a Roma.</p>';
-    els.chips = document.getElementById('chips'); els.hero = document.getElementById('hero'); els.now = document.getElementById('now'); els.meteo = document.getElementById('meteo'); els.fer = document.getElementById('fer'); els.we = document.getElementById('we');
+    els.chips = document.getElementById('chips'); els.hero = document.getElementById('hero'); els.now = document.getElementById('now'); els.meteo = document.getElementById('meteo'); els.fonte = document.getElementById('fonte'); els.fer = document.getElementById('fer'); els.we = document.getElementById('we');
     chips();
     els.chips.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; month = +b.getAttribute('data-m'); paint(); });
     paint(); U.nav(key);
-    if (window.CLIMA) window.CLIMA.applica(S).then(function (i) { info = i; paint(); }).catch(function () { errore = true; paint(); });
+    if (window.CLIMA) {
+      els.fonte.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        var C = window.CLIMA, st = C.load(); st.fonte = b.getAttribute('data-fonte'); C.save(st);
+        if (st.fonte !== 'nessuno' && !C.luogo(st)) { location.href = 'meteo.html'; return; }
+        aggiorna();
+      });
+      aggiorna();
+    }
   }
   build();
 })();

@@ -1,6 +1,6 @@
 (function () {
   var C = window.CLIMA, E = window.ENERGIA, U = window.UI, app = document.getElementById('app');
-  var modifica = /[?&]p=/.test(location.search), chiedi = false, pend = null, msg = '', busy = false, mkt = null, passo = Math.min(3, Math.max(1, parseInt((location.search.match(/[?&]p=(\d)/) || [])[1], 10) || 1));
+  var conf = false, modifica = /[?&]p=/.test(location.search), chiedi = false, pend = null, msg = '', busy = false, mkt = null, passo = Math.min(3, Math.max(1, parseInt((location.search.match(/[?&]p=(\d)/) || [])[1], 10) || 1));
   function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function v(x) { return x === null || x === undefined ? '' : x; }
   var COL = { A: '#1e8449', B: '#52a447', C: '#9ab52b', D: '#d4a017', E: '#e6862a', F: '#d9531e', G: '#b8281e' };
@@ -24,12 +24,21 @@
     return h;
   }
 
+  function riep(l, c) {
+    var pl = function (x, u) { return x ? x.toLocaleString('it-IT') + ' ' + u : 'di mercato'; };
+    return '<ul class="lst"><li><span><strong>' + (l ? esc(l.nome) : 'Non indicato') + '</strong><span class="wh">Indirizzo</span></span></li><li><span><strong>' + (c.mq && c.anno ? c.mq + ' m² · ' + c.anno : 'Non indicata') + '</strong><span class="wh">Casa</span></span></li><li><span><strong>' + pl(c.luce, '€/kWh') + '</strong><span class="wh">Luce</span></span></li><li><span><strong>' + pl(c.gas, '€/Smc') + '</strong><span class="wh">Gas</span></span></li></ul>';
+  }
+
   function render() {
     var st = C.load(), l = C.luogo(st), c = E.load(), h = '';
+    if (conf) {
+      h += '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div><div><h1>Setup</h1><p>Controlla i dati inseriti.</p></div>';
+      h += '<h2>Confermi questi dati?</h2><section class="card">' + riep(l, c) + (l && c.mq && c.anno ? '' : '<p class="note2">Mancano indirizzo o dati della casa: l’app userà valori medi.</p>') + '<a class="btn" href="index.html">Sì, conferma</a><button type="button" class="btn sec2" data-rivedi="1">No, rivedi</button></section>';
+      app.innerHTML = h; U.applyHue(235); U.nav('home'); return;
+    }
     if (l && c.mq && c.anno && !modifica) {
-      var pl = function (x, u) { return x ? x.toLocaleString('it-IT') + ' ' + u : 'di mercato'; };
       h += '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div><div><h1>Setup</h1><p>Indirizzo, casa e prezzi dell’energia.</p></div>';
-      h += '<h2>Setup già fatto</h2><section class="card"><p class="sm">Hai già completato il Setup. Vuoi modificarlo?</p><ul class="lst"><li><span><strong>' + esc(l.nome) + '</strong><span class="wh">Indirizzo</span></span></li><li><span><strong>' + c.mq + ' m² · ' + c.anno + '</strong><span class="wh">Casa</span></span></li><li><span><strong>' + pl(c.luce, '€/kWh') + '</strong><span class="wh">Luce</span></span></li><li><span><strong>' + pl(c.gas, '€/Smc') + '</strong><span class="wh">Gas</span></span></li></ul>' +
+      h += '<h2>Setup già fatto</h2><section class="card"><p class="sm">Hai già completato il Setup. Vuoi modificarlo?</p>' + riep(l, c) +
         (chiedi ? '<p class="note2">Cancellare indirizzo, casa e prezzi? L’app tornerà ai valori medi e dovrai rifare il Setup.</p><button type="button" class="btn" data-sicanc="1">Sì, cancella</button><button type="button" class="btn sec2" data-canc="0">Annulla</button>'
           : '<button type="button" class="btn" data-mod="1">Modifica</button><button type="button" class="btn sec2" data-canc="1">Cancella</button>') + '</section>' + aspetto();
       app.innerHTML = h; U.applyHue(235); U.nav('home'); return;
@@ -58,7 +67,7 @@
       '<label class="fld" for="gasp">Gas (€/Smc)</label><input class="in" id="gasp" type="number" inputmode="decimal" step="0.001" placeholder="per esempio 1,34" value="' + v(c.gas) + '">' +
       '<a class="btn sec2" href="energia.html">Vedi il consiglio elettrico o gas</a></section></div>';
     if (passo === 1) h += aspetto();
-    h += '<div class="nav2">' + (passo > 1 ? '<button type="button" class="btn sec2" data-passo="' + (passo - 1) + '">Indietro</button>' : '') + (passo < 3 ? '<button type="button" class="btn" data-passo="' + (passo + 1) + '">Avanti</button>' : '<a class="btn" href="index.html">Fine</a>') + '</div>';
+    h += '<div class="nav2">' + (passo > 1 ? '<button type="button" class="btn sec2" data-passo="' + (passo - 1) + '">Indietro</button>' : '') + (passo < 3 ? '<button type="button" class="btn" data-passo="' + (passo + 1) + '">Avanti</button>' : '<button type="button" class="btn" data-fine="1">Fine</button>') + '</div>';
     app.innerHTML = h; U.applyHue(235); U.nav('home');
   }
 
@@ -72,7 +81,9 @@
   function trovato(p) { pend = p; msg = ''; busy = false; render(); }
   app.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b || b.disabled) return; var st = C.load();
-    if (b.hasAttribute('data-tema')) { U.setTema(b.getAttribute('data-tema')); render(); }
+    if (b.hasAttribute('data-fine')) { leggi(); conf = true; render(); window.scrollTo(0, 0); }
+    else if (b.hasAttribute('data-rivedi')) { conf = false; passo = 1; render(); window.scrollTo(0, 0); }
+    else if (b.hasAttribute('data-tema')) { U.setTema(b.getAttribute('data-tema')); render(); }
     else if (b.hasAttribute('data-lang')) { if (window.I18N) { window.I18N.imposta(b.getAttribute('data-lang')); location.reload(); } }
     else if (b.hasAttribute('data-mod')) { modifica = true; passo = 1; render(); window.scrollTo(0, 0); }
     else if (b.hasAttribute('data-canc')) { chiedi = b.getAttribute('data-canc') === '1'; render(); }

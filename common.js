@@ -1,5 +1,6 @@
 (function () {
   var ICONS = {
+    bell: '<path d="M6 16.5V11a6 6 0 1112 0v5.5l1.5 2h-15l1.5-2z"/><path d="M10 20.5a2 2 0 004 0"/>',
     cloud: '<path d="M7 18.5a4 4 0 01-.4-7.98A5.5 5.5 0 0117.2 9.6 4.5 4.5 0 0117.5 18.5H7z"/>',
     rain: '<path d="M7 14.5a4 4 0 01-.4-7.98A5.5 5.5 0 0117.2 5.6 4.5 4.5 0 0117.5 14.5H7z"/><path d="M8.5 17.5l-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5"/>',
     cloudsun: '<circle cx="8.5" cy="8.5" r="3"/><path d="M8.5 2.5v1.2M2.5 8.5h1.2M4.3 4.3l.9.9M12.7 4.3l-.9.9"/><path d="M9 20a3.5 3.5 0 01-.3-7 4.8 4.8 0 019.2 1A3.5 3.5 0 0117.5 20H9z"/>',
@@ -65,11 +66,17 @@
   }
   try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { applyHue(H); }); } catch (e) {}
 
+  var navAct = null;
   function nav(a) {
+    navAct = a; var old = document.querySelector('nav.tabs'); if (old) old.remove();
+    var n = window.NOVITA ? window.NOVITA.conteggio() : 0;
     var t = [['home', 'index.html', 'Stagioni', 'home'], ['inverno', 'inverno.html', 'Inverno', 'snow'], ['estate', 'estate.html', 'Estate', 'sun'], ['meteo', 'meteo.html', 'Meteo', 'cloudsun'], ['energia', 'energia.html', 'Energia', 'bolt']];
+    if (n) t.push(['novita', 'novita.html', 'Novit\u00e0', 'bell', n]);
     var el = document.createElement('nav'); el.className = 'tabs'; el.setAttribute('aria-label', 'Sezioni');
-    el.innerHTML = t.map(function (x) { return '<a href="' + x[1] + '"' + (a === x[0] ? ' class="on" aria-current="page"' : '') + '><span>' + I(x[3]) + '</span>' + x[2] + '</a>'; }).join('');
+    el.innerHTML = t.map(function (x) { return '<a href="' + x[1] + '"' + (a === x[0] ? ' class="on" aria-current="page"' : '') + '><span>' + I(x[3]) + (x[4] ? '<b class="bdg" aria-label="' + x[4] + ' novit\u00e0">' + x[4] + '</b>' : '') + '</span>' + x[2] + '</a>'; }).join('');
     document.body.appendChild(el);
   }
+  // Quando cambiano le novità la barra si ridisegna da sola.
+  window.addEventListener('novita', function () { if (navAct !== null) nav(navAct); });
   window.UI = { meteo: meteo, I: I, hueFor: hueFor, applyHue: applyHue, nav: nav };
 })();

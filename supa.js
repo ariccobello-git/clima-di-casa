@@ -9,8 +9,8 @@
     t = String(t || '').replace(/[^0-9+]/g, ''); if (t.indexOf('00') === 0) t = '+' + t.slice(2);
     if (t.charAt(0) !== '+') t = '+39' + t.replace(/^0+(?=3)/, ''); return t;
   }
-  // L'accesso vale solo finché usi l'app: se esci dall'app o chiudi la pagina per più di GRACE secondi, va rifatto.
-  var GRACE = 20;
+  // L'accesso vale solo finché usi l'app: scade dopo 1 minuto senza tocchi, a schermo spento o se esci dall'app per più di GRACE secondi.
+  var GRACE = 20, IDLE = 60;
   function ss() { try { return window.sessionStorage; } catch (e) { return null; } }
   // Pulizia di vecchi accessi salvati in modo permanente.
   try { localStorage.removeItem('clima.tok'); localStorage.removeItem('clima.me'); ['clima_tok', 'clima_me'].forEach(function (k) { document.cookie = k + '=; path=/; max-age=0'; }); } catch (e) {}
@@ -22,13 +22,14 @@
     rpc: rpc, norm: norm, aggiorna: aggiorna,
     tok: function () {
       var s = ss(), t = s && s.getItem('clima.tok'); if (!t) return null;
-      if (Date.now() - (+s.getItem('clima.seen') || 0) > GRACE * 1000) { window.SB.clear(); return null; }
+      if (Date.now() - (+s.getItem('clima.seen') || 0) > GRACE * 1000 || Date.now() - (+s.getItem('clima.act') || 0) > IDLE * 1000) { window.SB.clear(); return null; }
       return t;
     },
+    act: function () { var s = ss(); try { if (s && s.getItem('clima.tok')) s.setItem('clima.act', String(Date.now())); } catch (e) {} },
     touch: function () { var s = ss(); try { if (s && s.getItem('clima.tok')) s.setItem('clima.seen', String(Date.now())); } catch (e) {} },
     me: function () { try { return JSON.parse(ss().getItem('clima.me')); } catch (e) { return null; } },
-    set: function (tok, nome, admin) { var s = ss(); try { if (s) { s.setItem('clima.tok', tok); s.setItem('clima.me', JSON.stringify({ nome: nome, admin: !!admin })); s.setItem('clima.seen', String(Date.now())); } } catch (e) {} },
-    clear: function () { var s = ss(); try { if (s) ['clima.tok', 'clima.me', 'clima.seen', 'clima.mirror', 'clima.dek', 'clima.vh'].forEach(function (k) { s.removeItem(k); }); } catch (e) {} }
+    set: function (tok, nome, admin) { var s = ss(); try { if (s) { s.setItem('clima.tok', tok); s.setItem('clima.me', JSON.stringify({ nome: nome, admin: !!admin })); s.setItem('clima.seen', String(Date.now())); s.setItem('clima.act', String(Date.now())); } } catch (e) {} },
+    clear: function () { var s = ss(); try { if (s) ['clima.tok', 'clima.me', 'clima.seen', 'clima.act', 'clima.mirror', 'clima.dek', 'clima.vh'].forEach(function (k) { s.removeItem(k); }); } catch (e) {} }
   };
 
   // Nell'app sulla Home non c'è "tira per aggiornare": lo aggiungo io.

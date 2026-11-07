@@ -29,12 +29,6 @@
 
   function render() {
     var h = '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div><div><h1>Account</h1><p>' + esc(me.nome) + (me.admin ? ' · amministratore' : '') + '</p></div>';
-    var LN = { it: 'Italiano', en: 'English', fr: 'Fran\u00e7ais' }, tid = U.temaId(), lg = window.I18N ? window.I18N.lingua() : 'it';
-    h += '<h2>Aspetto</h2><section class="card"><b>Colore</b><div class="tms" role="group" aria-label="Colore">' + U.TEMI.map(function (t) {
-      var sw = t.h === null ? 'linear-gradient(135deg,hsl(215 82% 44%),hsl(25 88% 52%))' : 'linear-gradient(135deg,hsl(' + t.h + ' ' + Math.round(82 * t.sat) + '% 46%),hsl(' + ((t.h + 344) % 360) + ' ' + Math.round(80 * t.sat) + '% 36%))';
-      return '<button type="button" class="tm" data-tema="' + t.id + '" aria-pressed="' + (tid === t.id) + '"><i style="background:' + sw + '"></i>' + t.nome + '</button>';
-    }).join('') + '</div><p class="sm">Automatico cambia colore con il mese: blu d\u2019inverno, arancio d\u2019estate.</p>' +
-      '<b style="display:block;margin-top:14px">Lingua</b><div class="seg" role="group" aria-label="Lingua">' + ['it', 'en', 'fr'].map(function (l) { return '<button type="button" lang="' + l + '" data-lang="' + l + '" aria-pressed="' + (lg === l) + '">' + LN[l] + '</button>'; }).join('') + '</div></section>';
     h += '<section class="card"><b>Cambia password</b><input class="in pin" id="old" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="Attuale" aria-label="Password attuale">' +
       '<input class="in pin" id="new" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="Nuova" aria-label="Nuova password">' + (me.admin ? '' : msg()) +
       '<button class="btn" data-a="chg">Cambia password</button><button class="btn sec2" data-a="out">Esci</button></section>' +
@@ -57,8 +51,6 @@
 
   app.addEventListener('click', function (e) {
     var bt = e.target.closest('button');
-    if (bt && bt.hasAttribute('data-tema')) { U.setTema(bt.getAttribute('data-tema')); render(); return; }
-    if (bt && bt.hasAttribute('data-lang')) { if (window.I18N) { window.I18N.imposta(bt.getAttribute('data-lang')); location.reload(); } return; }
     var b = e.target.closest('button'); if (!b || !b.hasAttribute('data-a')) return;
     var a = b.getAttribute('data-a'), id = b.getAttribute('data-id') && +b.getAttribute('data-id');
     if (me.admin && document.getElementById('an')) st.add = { nome: document.getElementById('an').value, tel: document.getElementById('at').value, pwd: document.getElementById('ap').value };

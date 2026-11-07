@@ -1,6 +1,6 @@
 (function () {
   var C = window.CLIMA, E = window.ENERGIA, U = window.UI, app = document.getElementById('app');
-  var pend = null, msg = '', busy = false, mkt = null, passo = Math.min(3, Math.max(1, parseInt((location.search.match(/[?&]p=(\d)/) || [])[1], 10) || 1));
+  var modifica = /[?&]p=/.test(location.search), chiedi = false, pend = null, msg = '', busy = false, mkt = null, passo = Math.min(3, Math.max(1, parseInt((location.search.match(/[?&]p=(\d)/) || [])[1], 10) || 1));
   function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function v(x) { return x === null || x === undefined ? '' : x; }
   var COL = { A: '#1e8449', B: '#52a447', C: '#9ab52b', D: '#d4a017', E: '#e6862a', F: '#d9531e', G: '#b8281e' };
@@ -13,8 +13,27 @@
       '<p class="hint">Stima statistica per epoca di costruzione, tipo di casa e ristrutturazioni. Fonte: banca dati nazionale degli attestati di prestazione energetica (ENEA-CTI, rapporto annuale) e tipologie TABULA/EPISCOPE. Non sostituisce un APE.</p>';
   }
 
+  function aspetto() {
+    var h = '';
+    var LN = { it: 'Italiano', en: 'English', fr: 'Fran\u00e7ais' }, tid = U.temaId(), lg = window.I18N ? window.I18N.lingua() : 'it';
+    h += '<h2>Aspetto</h2><section class="card"><b>Colore</b><div class="tms" role="group" aria-label="Colore">' + U.TEMI.map(function (t) {
+      var sw = t.h === null ? 'linear-gradient(135deg,hsl(215 82% 44%),hsl(25 88% 52%))' : 'linear-gradient(135deg,hsl(' + t.h + ' ' + Math.round(82 * t.sat) + '% 46%),hsl(' + ((t.h + 344) % 360) + ' ' + Math.round(80 * t.sat) + '% 36%))';
+      return '<button type="button" class="tm" data-tema="' + t.id + '" aria-pressed="' + (tid === t.id) + '"><i style="background:' + sw + '"></i>' + t.nome + '</button>';
+    }).join('') + '</div><p class="sm">Automatico cambia colore con il mese: blu d\u2019inverno, arancio d\u2019estate.</p>' +
+      '<b style="display:block;margin-top:14px">Lingua</b><div class="seg" role="group" aria-label="Lingua">' + ['it', 'en', 'fr'].map(function (l) { return '<button type="button" lang="' + l + '" data-lang="' + l + '" aria-pressed="' + (lg === l) + '">' + LN[l] + '</button>'; }).join('') + '</div></section>';
+    return h;
+  }
+
   function render() {
     var st = C.load(), l = C.luogo(st), c = E.load(), h = '';
+    if (l && c.mq && c.anno && !modifica) {
+      var pl = function (x, u) { return x ? x.toLocaleString('it-IT') + ' ' + u : 'di mercato'; };
+      h += '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div><div><h1>Setup</h1><p>Indirizzo, casa e prezzi dell’energia.</p></div>';
+      h += '<h2>Setup già fatto</h2><section class="card"><p class="sm">Hai già completato il Setup. Vuoi modificarlo?</p><ul class="lst"><li><span><strong>' + esc(l.nome) + '</strong><span class="wh">Indirizzo</span></span></li><li><span><strong>' + c.mq + ' m² · ' + c.anno + '</strong><span class="wh">Casa</span></span></li><li><span><strong>' + pl(c.luce, '€/kWh') + '</strong><span class="wh">Luce</span></span></li><li><span><strong>' + pl(c.gas, '€/Smc') + '</strong><span class="wh">Gas</span></span></li></ul>' +
+        (chiedi ? '<p class="note2">Cancellare indirizzo, casa e prezzi? L’app tornerà ai valori medi e dovrai rifare il Setup.</p><button type="button" class="btn" data-sicanc="1">Sì, cancella</button><button type="button" class="btn sec2" data-canc="0">Annulla</button>'
+          : '<button type="button" class="btn" data-mod="1">Modifica</button><button type="button" class="btn sec2" data-canc="1">Cancella</button>') + '</section>' + aspetto();
+      app.innerHTML = h; U.applyHue(235); U.nav('home'); return;
+    }
     h += '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div><div><h1>Setup</h1><p>Indirizzo, casa e prezzi dell’energia.</p></div>';
     h += '<div class="steps" role="progressbar" aria-valuemin="1" aria-valuemax="3" aria-valuenow="' + passo + '" aria-label="Passo ' + passo + ' di 3">' + [1, 2, 3].map(function (n) { return '<i class="' + (n <= passo ? 'on' : '') + '"></i>'; }).join('') + '</div><p class="sm" style="margin:0 2px 6px">Passo ' + passo + ' di 3 · ' + ['Dove sei', 'La casa', 'I prezzi'][passo - 1] + '</p>';
     h += '<div class="stp' + (passo === 1 ? ' on' : '') + '"><h2>Indirizzo</h2><section class="card">';
@@ -38,6 +57,7 @@
       '<label class="fld" for="luce">Luce (€/kWh)</label><input class="in" id="luce" type="number" inputmode="decimal" step="0.0001" placeholder="per esempio 0,30" value="' + v(c.luce) + '">' +
       '<label class="fld" for="gasp">Gas (€/Smc)</label><input class="in" id="gasp" type="number" inputmode="decimal" step="0.001" placeholder="per esempio 1,34" value="' + v(c.gas) + '">' +
       '<a class="btn sec2" href="energia.html">Vedi il consiglio elettrico o gas</a></section></div>';
+    if (passo === 1) h += aspetto();
     h += '<div class="nav2">' + (passo > 1 ? '<button type="button" class="btn sec2" data-passo="' + (passo - 1) + '">Indietro</button>' : '') + (passo < 3 ? '<button type="button" class="btn" data-passo="' + (passo + 1) + '">Avanti</button>' : '<a class="btn" href="index.html">Fine</a>') + '</div>';
     app.innerHTML = h; U.applyHue(235); U.nav('home');
   }
@@ -52,7 +72,12 @@
   function trovato(p) { pend = p; msg = ''; busy = false; render(); }
   app.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b || b.disabled) return; var st = C.load();
-    if (b.hasAttribute('data-passo')) { var qv = document.getElementById('q'); if (qv && qv.value) { /* niente da salvare: l'indirizzo si cerca con il pulsante */ } passo = +b.getAttribute('data-passo'); render(); window.scrollTo(0, 0); }
+    if (b.hasAttribute('data-tema')) { U.setTema(b.getAttribute('data-tema')); render(); }
+    else if (b.hasAttribute('data-lang')) { if (window.I18N) { window.I18N.imposta(b.getAttribute('data-lang')); location.reload(); } }
+    else if (b.hasAttribute('data-mod')) { modifica = true; passo = 1; render(); window.scrollTo(0, 0); }
+    else if (b.hasAttribute('data-canc')) { chiedi = b.getAttribute('data-canc') === '1'; render(); }
+    else if (b.hasAttribute('data-sicanc')) { st.luoghi = []; st.attivo = null; C.save(st); var e0 = E.load(); E.save({ mq: null, piani: 1, tipo: 'condominio', anno: null, ristr: null, gasSmc: null, fonte: e0.fonte, luce: null, gas: null, ultimaVerifica: null, finestra: null, consiglio: null }); chiedi = false; modifica = false; passo = 1; render(); }
+    else if (b.hasAttribute('data-passo')) { var qv = document.getElementById('q'); if (qv && qv.value) { /* niente da salvare: l'indirizzo si cerca con il pulsante */ } passo = +b.getAttribute('data-passo'); render(); window.scrollTo(0, 0); }
     else if (b.hasAttribute('data-tipo')) { var c = E.load(); leggi(); c = E.load(); c.tipo = b.getAttribute('data-tipo'); E.save(c); render(); }
     else if (b.id === 'cerca') {
       var q = (document.getElementById('q').value || '').trim(); if (q.length < 2) return say('Scrivi un indirizzo o una città.');

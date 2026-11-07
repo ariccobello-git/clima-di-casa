@@ -102,3 +102,12 @@ html.dk .tabs{border-color:rgba(255,255,255,.12)}
 .btn.sm2{min-height:40px;font-size:15px;margin:6px 0;border-radius:14px;padding:0 14px;width:auto}
 .rw{display:flex;gap:8px;flex-wrap:wrap}
 .in.pin::placeholder{letter-spacing:normal;font-size:17px}
+.wx{position:relative;overflow:hidden}.wx .row{display:flex;align-items:center;justify-content:space-between;gap:12px}.wx .ic{width:92px;height:92px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex:none;position:relative}.wx .ic .si{width:52px;height:52px;stroke-width:1.5}
+.wx .big{display:block;font:800 60px/1 ui-rounded,-apple-system,sans-serif;letter-spacing:-.03em;margin:4px 0}.wx small{color:rgba(255,255,255,.88);font-weight:600;font-size:15px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 12px}.tile{background:var(--card);border:1px solid rgba(255,255,255,.45);box-shadow:var(--sh);border-radius:22px;padding:14px 10px;text-align:center;-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px)}html.dk .tile{border-color:rgba(255,255,255,.08)}
+.tile .si{width:26px;height:26px;color:var(--pri)}.tile b{display:block;font:800 24px ui-rounded,-apple-system,sans-serif;margin:4px 0 2px;letter-spacing:-.02em}.tile span{display:block;font-size:12.5px;color:var(--mu);line-height:1.25}
+.gauge{height:8px;border-radius:99px;background:var(--fill);margin:8px 6px 4px;overflow:hidden}.gauge i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--g1),var(--g2))}
+.days{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.dy{text-align:center;padding:10px 4px;border-radius:18px;background:var(--fill)}.dy .si{width:30px;height:30px;color:var(--pri)}.dy b{display:block;font-size:14px}.dy span{display:block;font-size:13px;color:var(--mu)}
+.src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.22);color:#fff;margin-top:6px}.src .si{width:14px;height:14px}
+.note2{border-left:4px solid var(--pri);padding:10px 14px;border-radius:14px;background:var(--fill);margin:10px 0;font-size:15px}
+.fld{display:block;margin:10px 0 2px;font-weight:600;font-size:15px}.hint{font-size:13px;color:var(--mu);margin:2px 0 6px}

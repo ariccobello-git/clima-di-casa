@@ -5,7 +5,7 @@
     bilanciato: { nome: 'Bilanciato', w: 0,  s: 0,  d: 'I valori standard.' },
     comfort:    { nome: 'Comfort',    w: 1,  s: -1, d: 'Un grado in più d’inverno e uno in meno d’estate.' }
   };
-  var DEF = { luoghi: [], attivo: null, fonte: 'nessuno', stile: 'bilanciato' };
+  var DEF = { luoghi: [], attivo: null, fonte: 'storico', stile: 'bilanciato' };
   var api = {
     STILI: STILI,
     getJson: function (url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); },
@@ -13,7 +13,7 @@
   };
   function rd(k) { try { return JSON.parse(api.store().getItem(k)); } catch (e) { return null; } }
   function wr(k, v) { try { api.store().setItem(k, JSON.stringify(v)); } catch (e) {} }
-  api.load = function () { var s = rd(KEY) || {}; var o = {}; for (var k in DEF) o[k] = s[k] !== undefined ? s[k] : DEF[k]; o.luoghi = o.luoghi || []; return o; };
+  api.load = function () { var s = rd(KEY) || {}; var o = {}; for (var k in DEF) o[k] = s[k] !== undefined ? s[k] : DEF[k]; o.luoghi = o.luoghi || []; if (o.fonte === 'nessuno') o.fonte = 'storico'; return o; };
   api.save = function (s) { wr(KEY, s); };
   api.luogo = function (s) { s = s || api.load(); return s.luoghi.filter(function (l) { return l.id === s.attivo; })[0] || null; };
   api.casa = function (s) { s = s || api.load(); return s.luoghi.filter(function (l) { return l.casa; })[0] || null; };
@@ -70,15 +70,20 @@
     var u = 'https://archive-api.open-meteo.com/v1/archive?latitude=' + l.lat + '&longitude=' + l.lon + '&start_date=' + y + '-01-01&end_date=' + y + '-12-31&daily=temperature_2m_max,temperature_2m_min&timezone=auto';
     return api.getJson(u).then(function (j) { var m = api.statMesi(j.daily); wr(key(l, y), m); return { anno: y, mesi: m }; });
   };
+  // Adesso: temperatura, percepita, umidità, tempo (codice WMO), pioggia. Giorni: previsioni di oggi e dei due successivi.
   api.live = function (l, now) {
-    var k = 'clima.live.' + l.lat.toFixed(2) + '.' + l.lon.toFixed(2), c = rd(k), t = (now || new Date()).getTime();
-    if (c && t - c.t < 3600000) return Promise.resolve(c.v);
-    var u = 'https://api.open-meteo.com/v1/forecast?latitude=' + l.lat + '&longitude=' + l.lon + '&daily=temperature_2m_max,temperature_2m_min&current=temperature_2m&forecast_days=3&timezone=auto';
+    var k = 'clima.live2.' + l.lat.toFixed(2) + '.' + l.lon.toFixed(2), c = rd(k), t = (now || new Date()).getTime();
+    if (c && t - c.t < 1800000) return Promise.resolve(c.v);
+    var u = 'https://api.open-meteo.com/v1/forecast?latitude=' + l.lat + '&longitude=' + l.lon + '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,precipitation&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&forecast_days=3&timezone=auto';
     return api.getJson(u).then(function (j) {
-      var v = { adesso: j.current && j.current.temperature_2m, giorni: j.daily.time.map(function (d, i) { var a = j.daily.temperature_2m_max[i], b = j.daily.temperature_2m_min[i]; return { data: d, max: a, min: b, mean: (a + b) / 2 }; }) };
+      var q = j.current || {}, d = j.daily;
+      var v = { adesso: { t: q.temperature_2m, app: q.apparent_temperature, um: q.relative_humidity_2m, code: q.weather_code, notte: q.is_day === 0, prec: q.precipitation },
+        giorni: d.time.map(function (x, i) { var a = d.temperature_2m_max[i], b = d.temperature_2m_min[i]; return { data: x, max: a, min: b, mean: (a + b) / 2, code: d.weather_code && d.weather_code[i], pp: d.precipitation_probability_max && d.precipitation_probability_max[i] }; }) };
       wr(k, { t: t, v: v }); return v;
     }).catch(function (e) { if (c) return c.v; throw e; });
   };
+  // Medie dell'anno scorso già scaricate (nessuna rete): servono per il consiglio elettrico/gas.
+  api.statCache = function (l, now) { return l ? rd(key(l, api.annoScorso(now))) : null; };
 
   // Calcola i set point di tutti i mesi e li mette in SCHED.ov. Ritorna info per la pagina.
   api.applica = function (S, now) {

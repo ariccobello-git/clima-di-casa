@@ -19,6 +19,8 @@
 <body>
 <main id="app"></main>
 <script src="schedule.js"></script>
+<script src="climate.js"></script>
+<script src="energia.js"></script>
 <script src="common.js"></script>
 <script>
 (function () {
@@ -27,14 +29,18 @@
   function sec(cls, href, emb, titolo, sotto, chips, on) {
     return '<a class="sec ' + cls + '" href="' + href + '"><span class="sic" aria-hidden="true">' + U.I(emb) + '</span><div style="position:relative;min-width:0"><b>' + titolo + '</b><small>' + sotto + '</small><div class="sst">' + chips + (on ? '<span class="bd">In corso</span>' : '') + '</div></div><span class="go" aria-hidden="true">' + U.I('chev') + '</span></a>';
   }
+  var hasPlace = !!window.CLIMA.luogo(), hasCasa = window.ENERGIA.ok(window.ENERGIA.load()) || window.ENERGIA.load().gasSmc > 0;
+  var start = (hasPlace && hasCasa) ? '' : '<section class="card"><b>Prima di iniziare</b><p class="sm">Un minuto per indicare dove sei e com\u2019\u00e8 la tua casa. Senza, vedi solo valori medi.</p><a class="btn" href="setup.html">Completa il Setup</a></section>';
   document.getElementById('app').innerHTML =
+    '<div class="hd" style="justify-content:flex-end"><a class="back" href="setup.html" aria-label="Setup">' + U.I('gear') + '</a><a class="back" href="account.html" aria-label="Account">' + U.I('shield') + '</a></div>' +
     '<div><p>' + new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) + '</p><h1>Clima di casa</h1><p>Scegli la stagione per vedere le temperature da impostare mese per mese.</p></div>' +
-    '<div style="height:10px"></div>' +
+    '<div style="height:10px"></div>' + start + '<div id="cons"></div>' +
     sec('w', 'inverno.html', 'snow', 'Inverno', 'Riscaldamento da novembre ad aprile', '<span class="bd">19–20 °C</span><span class="bd">Caldo</span>', now === 'inverno') +
     sec('s', 'estate.html', 'sun', 'Estate', 'Raffrescamento da giugno a settembre', '<span class="bd">26–27 °C</span><span class="bd">Freddo</span>', now === 'estate') +
     '<div class="cmds"><a class="cm" href="consigli.html"><i class="ab">' + U.I('bulb') + '</i><b>Consigli di risparmio</b><small>Inverno ed estate</small></a>' +
-    '<a class="cm" href="spiegazione.html"><i class="ab">' + U.I('bolt') + '</i><b>Perché elettrico e non gas</b><small>Costi a confronto</small></a></div>' +
+    '<a class="cm" href="energia.html"><i class="ab">' + U.I('flame') + '</i><b>Energia</b><small>Elettrica o gas: cosa conviene</small></a></div>' +
     '<p class="sm" style="text-align:center;margin-top:8px">Acceso solo quando sei in casa, spento fuori casa e di notte.</p>';
+  window.ENERGIA.banner(document.getElementById('cons'), S, window.CLIMA, U);
   U.nav('home');
 })();
 </script>

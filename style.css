@@ -111,3 +111,31 @@ html.dk .tabs{border-color:rgba(255,255,255,.12)}
 .src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.22);color:#fff;margin-top:6px}.src .si{width:14px;height:14px}
 .note2{border-left:4px solid var(--pri);padding:10px 14px;border-radius:14px;background:var(--fill);margin:10px 0;font-size:15px}
 .fld{display:block;margin:10px 0 2px;font-weight:600;font-size:15px}.hint{font-size:13px;color:var(--mu);margin:2px 0 6px}
+
+/* Animazioni del tempo: discrete, nello stesso stile dell'app */
+.fx{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:inherit;--fxc:rgba(255,255,255,.7);--fh:190px}
+.dy{position:relative;overflow:hidden;--fxc:var(--pri);--fh:110px}.dy>*:not(.fx){position:relative}.dy .fx{border-radius:18px}
+.dy .tg{font-size:12px;font-weight:700;color:var(--pri)}
+.fx i{position:absolute;display:block}
+.fx-rain i,.fx-thunder i{top:-20px;width:2px;height:15px;border-radius:2px;background:linear-gradient(transparent,var(--fxc));opacity:.6;animation:fxfall 1.1s linear infinite}
+@keyframes fxfall{to{transform:translateY(var(--fh))}}
+.fx-snow i{top:-10px;width:5px;height:5px;border-radius:50%;background:var(--fxc);opacity:.75;animation:fxsnow 5s linear infinite}
+@keyframes fxsnow{50%{margin-left:8px}to{transform:translateY(var(--fh));margin-left:-4px}}
+.fx-sun:before,.fx-hot:before{content:"";position:absolute;right:-40px;top:-40px;width:170px;height:170px;border-radius:50%;background:radial-gradient(var(--fxc),transparent 66%);opacity:.35;animation:fxpulse 4.5s ease-in-out infinite}
+.dy.fx-sun:before,.dy .fx-sun:before,.dy .fx-hot:before{width:90px;height:90px;right:-24px;top:-24px}
+.fx-hot i{bottom:-10px;width:10px;height:10px;border-radius:50%;border:1.5px solid var(--fxc);opacity:0;animation:fxrise 4.5s ease-in infinite}
+@keyframes fxpulse{50%{transform:scale(1.18);opacity:.55}}
+@keyframes fxrise{20%{opacity:.5}to{transform:translateY(calc(var(--fh) * -.8));opacity:0}}
+.fx-cloud i{height:30px;width:90px;border-radius:99px;background:var(--fxc);opacity:.16;animation:fxdrift 16s linear infinite}
+.dy .fx-cloud i{height:18px;width:52px}
+@keyframes fxdrift{from{transform:translateX(-120px)}to{transform:translateX(480px)}}
+.dy .fx-cloud i{animation-name:fxdrift2}@keyframes fxdrift2{from{transform:translateX(-60px)}to{transform:translateX(160px)}}
+.fx-fog i{left:-10%;width:80%;height:10px;border-radius:99px;background:var(--fxc);opacity:.16;filter:blur(3px);animation:fxslide 7s ease-in-out infinite alternate}
+@keyframes fxslide{to{transform:translateX(24%)}}
+.fx-cold i{width:4px;height:4px;border-radius:50%;background:var(--fxc);opacity:0;animation:fxtw 3s ease-in-out infinite}
+@keyframes fxtw{50%{opacity:.8;transform:scale(1.6)}}
+.fx-thunder:after{content:"";position:absolute;inset:0;background:#fff;opacity:0;animation:fxflash 7s infinite}
+@keyframes fxflash{0%,91%,95%,100%{opacity:0}93%{opacity:.35}}
+.fx-humid i{width:6px;height:8px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:var(--fxc);opacity:0;animation:fxdrop 3.6s ease-in-out infinite}
+@keyframes fxdrop{30%{opacity:.5}to{transform:translateY(24px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.fx i,.fx:before,.fx:after{animation:none!important}}

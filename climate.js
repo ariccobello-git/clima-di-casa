@@ -72,13 +72,13 @@
   };
   // Adesso: temperatura, percepita, umidità, tempo (codice WMO), pioggia. Giorni: previsioni di oggi e dei due successivi.
   api.live = function (l, now) {
-    var k = 'clima.live2.' + l.lat.toFixed(2) + '.' + l.lon.toFixed(2), c = rd(k), t = (now || new Date()).getTime();
+    var k = 'clima.live3.' + l.lat.toFixed(2) + '.' + l.lon.toFixed(2), c = rd(k), t = (now || new Date()).getTime();
     if (c && t - c.t < 1800000) return Promise.resolve(c.v);
-    var u = 'https://api.open-meteo.com/v1/forecast?latitude=' + l.lat + '&longitude=' + l.lon + '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,precipitation&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&forecast_days=3&timezone=auto';
+    var u = 'https://api.open-meteo.com/v1/forecast?latitude=' + l.lat + '&longitude=' + l.lon + '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,precipitation&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,relative_humidity_2m_mean&forecast_days=3&timezone=auto';
     return api.getJson(u).then(function (j) {
       var q = j.current || {}, d = j.daily;
       var v = { adesso: { t: q.temperature_2m, app: q.apparent_temperature, um: q.relative_humidity_2m, code: q.weather_code, notte: q.is_day === 0, prec: q.precipitation },
-        giorni: d.time.map(function (x, i) { var a = d.temperature_2m_max[i], b = d.temperature_2m_min[i]; return { data: x, max: a, min: b, mean: (a + b) / 2, code: d.weather_code && d.weather_code[i], pp: d.precipitation_probability_max && d.precipitation_probability_max[i] }; }) };
+        giorni: d.time.map(function (x, i) { var a = d.temperature_2m_max[i], b = d.temperature_2m_min[i]; return { data: x, max: a, min: b, mean: (a + b) / 2, code: d.weather_code && d.weather_code[i], pp: d.precipitation_probability_max && d.precipitation_probability_max[i], um: d.relative_humidity_2m_mean && d.relative_humidity_2m_mean[i] }; }) };
       wr(k, { t: t, v: v }); return v;
     }).catch(function (e) { if (c) return c.v; throw e; });
   };

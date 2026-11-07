@@ -1,6 +1,6 @@
 (function () {
   var C = window.CLIMA, E = window.ENERGIA, U = window.UI, app = document.getElementById('app');
-  var pend = null, msg = '', busy = false, mkt = null;
+  var pend = null, msg = '', busy = false, mkt = null, passo = Math.min(3, Math.max(1, parseInt((location.search.match(/[?&]p=(\d)/) || [])[1], 10) || 1));
   function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function v(x) { return x === null || x === undefined ? '' : x; }
   var COL = { A: '#1e8449', B: '#52a447', C: '#9ab52b', D: '#d4a017', E: '#e6862a', F: '#d9531e', G: '#b8281e' };
@@ -16,7 +16,8 @@
   function render() {
     var st = C.load(), l = C.luogo(st), c = E.load(), h = '';
     h += '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div><div><h1>Setup</h1><p>Indirizzo, casa e prezzi dell’energia.</p></div>';
-    h += '<h2>Indirizzo</h2><section class="card">';
+    h += '<div class="steps" role="progressbar" aria-valuemin="1" aria-valuemax="3" aria-valuenow="' + passo + '" aria-label="Passo ' + passo + ' di 3">' + [1, 2, 3].map(function (n) { return '<i class="' + (n <= passo ? 'on' : '') + '"></i>'; }).join('') + '</div><p class="sm" style="margin:0 2px 6px">Passo ' + passo + ' di 3 · ' + ['Dove sei', 'La casa', 'I prezzi'][passo - 1] + '</p>';
+    h += '<div class="stp' + (passo === 1 ? ' on' : '') + '"><h2>Indirizzo</h2><section class="card">';
     if (l) h += '<div class="lu" style="margin:0 0 10px"><b>' + esc(l.nome) + '</b><small>' + (l.casa ? 'È casa tua: riferimento standard' : 'Sessione fuori casa') + '</small></div>';
     if (pend) h += '<p class="sm"><b>' + esc(pend.nome) + '</b></p><p>È casa tua?</p><div class="seg"><button type="button" data-casa="1">Sì, è casa</button><button type="button" data-casa="0">No, un altro luogo</button></div>';
     else h += '<input id="q" class="in" type="search" placeholder="Via, numero civico, città" autocomplete="street-address"><button class="btn" id="cerca" type="button"' + (busy ? ' disabled' : '') + '>Cerca indirizzo</button><button class="btn sec2" id="geo" type="button"' + (busy ? ' disabled' : '') + '>Usa la mia posizione</button>';
@@ -24,19 +25,20 @@
     if (st.luoghi.length > 1) h += '<ul class="lst">' + st.luoghi.map(function (x) {
       return '<li><span><strong>' + esc(x.nome) + '</strong><span class="wh">' + (x.casa ? 'Casa' : 'Sessione') + (x.id === st.attivo ? ' · in uso' : '') + '</span></span><span><button type="button" class="chip" data-use="' + x.id + '"' + (x.id === st.attivo ? ' disabled' : '') + '>Usa</button> <button type="button" class="chip" data-del="' + x.id + '">Elimina</button></span></li>';
     }).join('') + '</ul>';
-    h += '</section>';
-    h += '<h2>La casa</h2><section class="card">' +
+    h += '</section></div>';
+    h += '<div class="stp' + (passo === 2 ? ' on' : '') + '"><h2>La casa</h2><section class="card">' +
       '<label class="fld" for="mq">Superficie totale (m²)</label><input class="in" id="mq" type="number" inputmode="decimal" min="10" value="' + v(c.mq) + '">' +
       '<label class="fld">Tipo di abitazione</label><div class="seg" role="group"><button type="button" data-tipo="condominio" aria-pressed="' + (c.tipo === 'condominio') + '">Condominio</button><button type="button" data-tipo="villino" aria-pressed="' + (c.tipo === 'villino') + '">Villino</button></div>' +
       '<label class="fld" for="piani">Numero di piani</label><input class="in" id="piani" type="number" inputmode="numeric" min="1" max="30" value="' + v(c.piani) + '">' +
       '<label class="fld" for="anno">Anno di costruzione</label><input class="in" id="anno" type="number" inputmode="numeric" placeholder="per esempio 1985" value="' + v(c.anno) + '">' +
       '<label class="fld" for="ristr">Anno dell’ultima ristrutturazione (facoltativo)</label><input class="in" id="ristr" type="number" inputmode="numeric" placeholder="infissi, cappotto, caldaia" value="' + v(c.ristr) + '">' +
-      '<label class="fld" for="gas">Gas del riscaldamento in un anno, in Smc (facoltativo)</label><input class="in" id="gas" type="number" inputmode="decimal" placeholder="lo trovi in bolletta" value="' + v(c.gasSmc) + '"><p class="hint">Smc sono i metri cubi di gas che trovi in bolletta. Se lo conosci, i calcoli partono dal tuo consumo reale. Conta solo il riscaldamento: se hai solo il totale annuo, togli circa 150 Smc per acqua calda e cucina.</p>' +
-      '<p class="ok" id="sv" role="status"></p><div id="esito">' + esito(c) + '</div></section>';
-    h += '<h2>Prezzi dell’energia</h2><section class="card"><p class="sm">Prezzi tutto compreso, imposte incluse. Lascia vuoto per usare quelli di mercato' + (mkt ? ' (aggiornati al ' + esc(mkt.aggiornato) + ': luce ' + mkt.luce.toLocaleString('it-IT') + ' €/kWh, gas ' + mkt.gas.toLocaleString('it-IT') + ' €/Smc)' : '') + '.</p>' +
+      '<label class="fld" for="gas">Gas del riscaldamento in un anno, in Smc (facoltativo)</label><input class="in" id="gas" type="number" inputmode="decimal" placeholder="lo trovi in bolletta" value="' + v(c.gasSmc) + '"><p class="hint">Smc sono i metri cubi di gas che trovi in bolletta.' + U.aiuto('smc') + ' Se lo conosci, i calcoli partono dal tuo consumo reale. Conta solo il riscaldamento: se hai solo il totale annuo, togli circa 150 Smc per acqua calda e cucina.</p>' +
+      '<p class="ok" id="sv" role="status"></p><div id="esito">' + esito(c) + '</div></section></div>';
+    h += '<div class="stp' + (passo === 3 ? ' on' : '') + '"><h2>Prezzi dell’energia</h2><section class="card"><p class="sm">Prezzi tutto compreso, imposte incluse. Lascia vuoto per usare quelli di mercato' + (mkt ? ' (aggiornati al ' + esc(mkt.aggiornato) + ': luce ' + mkt.luce.toLocaleString('it-IT') + ' €/kWh, gas ' + mkt.gas.toLocaleString('it-IT') + ' €/Smc)' : '') + '.</p>' +
       '<label class="fld" for="luce">Luce (€/kWh)</label><input class="in" id="luce" type="number" inputmode="decimal" step="0.0001" placeholder="per esempio 0,30" value="' + v(c.luce) + '">' +
       '<label class="fld" for="gasp">Gas (€/Smc)</label><input class="in" id="gasp" type="number" inputmode="decimal" step="0.001" placeholder="per esempio 1,34" value="' + v(c.gas) + '">' +
-      '<a class="btn sec2" href="energia.html">Vedi il consiglio elettrico o gas</a></section>';
+      '<a class="btn sec2" href="energia.html">Vedi il consiglio elettrico o gas</a></section></div>';
+    h += '<div class="nav2">' + (passo > 1 ? '<button type="button" class="btn sec2" data-passo="' + (passo - 1) + '">Indietro</button>' : '') + (passo < 3 ? '<button type="button" class="btn" data-passo="' + (passo + 1) + '">Avanti</button>' : '<a class="btn" href="index.html">Fine</a>') + '</div>';
     app.innerHTML = h; U.applyHue(235); U.nav('home');
   }
 
@@ -50,7 +52,8 @@
   function trovato(p) { pend = p; msg = ''; busy = false; render(); }
   app.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b || b.disabled) return; var st = C.load();
-    if (b.hasAttribute('data-tipo')) { var c = E.load(); leggi(); c = E.load(); c.tipo = b.getAttribute('data-tipo'); E.save(c); render(); }
+    if (b.hasAttribute('data-passo')) { var qv = document.getElementById('q'); if (qv && qv.value) { /* niente da salvare: l'indirizzo si cerca con il pulsante */ } passo = +b.getAttribute('data-passo'); render(); window.scrollTo(0, 0); }
+    else if (b.hasAttribute('data-tipo')) { var c = E.load(); leggi(); c = E.load(); c.tipo = b.getAttribute('data-tipo'); E.save(c); render(); }
     else if (b.id === 'cerca') {
       var q = (document.getElementById('q').value || '').trim(); if (q.length < 2) return say('Scrivi un indirizzo o una città.');
       busy = true; msg = 'Cerco…'; render();

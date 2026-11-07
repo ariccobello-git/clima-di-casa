@@ -2,7 +2,8 @@
   var S = window.SCHED, U = window.UI, key = window.SEASON, cfg = S.SEASONS[key], emb = key === 'inverno' ? 'snow' : 'sun';
   var today = new Date(), active = S.stagioneOggi(today) === key;
   // Inverno con la caldaia: termostato ambiente e temperatura dell'acqua dei termosifoni al posto del condizionatore.
-  var sis = (key === 'inverno' && window.ENERGIA && window.ENERGIA.load().fonte === 'gas') ? 'caldaia' : 'split';
+  function calcSis() { return (key === 'inverno' && window.ENERGIA && window.ENERGIA.load().fonte === 'gas') ? 'caldaia' : 'split'; }
+  var sis = calcSis();
   var month = active ? today.getMonth() + 1 : cfg.ordine[0];
   var perche = {
     inverno: [
@@ -48,6 +49,7 @@
     ]
   };
   var els = {}, perDati = sis === 'caldaia' ? 'caldaia' : key;
+  function chiudiNota() {}
   function deg(t, rid) { return t === null ? '<span class="deg o">Spento</span>' : '<span class="deg' + (rid ? ' o' : ' tn') + '">' + t + ' °C</span>'; }
 
   function card(tipo) {
@@ -78,7 +80,7 @@
     var d = S.MESI[month], verb = cfg.modo, t = S.setPoint(month);
     els.hero.className = 'hero';
     var te = d.media; if (info && info.live && month === today.getMonth() + 1 && info.live.giorni[0]) te = info.live.giorni[0].mean;
-    var riga = sis === 'caldaia' ? 'Termostato ambiente' + (t === null ? ' · non serve scaldare' : ' · mandata caldaia circa ' + S.mandata(te) + ' °C') : 'Modalità ' + verb + ' · media del mese ' + String(d.media).replace('.', ',') + ' °C';
+    var riga = sis === 'caldaia' ? 'Termostato ambiente' + (t === null ? ' · non serve scaldare' : ' · mandata caldaia circa ' + S.mandata(te) + ' °C') + U.aiuto('mandata') : 'Modalità ' + verb + ' · media del mese ' + String(d.media).replace('.', ',') + ' °C';
     els.hero.innerHTML = '<div style="min-width:0"><small>' + (sis === 'caldaia' ? 'Termostato di ' : 'Temperatura di ') + d.nome + '</small><span class="big tn">' + (t === null ? 'Spento' : t + ' °C') + '</span><span class="amt">' + riga + '</span>' + fonteBadge() + '</div><div class="wm">' + U.I(emb) + '</div>';
   }
 
@@ -93,7 +95,8 @@
   }
 
   function chips() {
-    els.chips.innerHTML = cfg.ordine.map(function (m) {
+    var ora = today.getMonth() + 1;
+    els.chips.innerHTML = (active && month !== ora ? '<button type="button" class="chip oggi" data-oggi="1">' + U.I('clock') + 'Oggi</button>' : '') + cfg.ordine.map(function (m) {
       var d = S.MESI[m];
       return '<button type="button" class="chip" data-m="' + m + '" aria-pressed="' + (m === month) + '" style="--dc:hsl(' + Math.round(U.hueFor(d.media)) + ' 85% 50%)"><i></i>' + d.nome + '</button>';
     }).join('');
@@ -103,15 +106,17 @@
   function banner() {
     var el = els.meteo, st = window.CLIMA.load(), l = window.CLIMA.luogo(st), C = window.CLIMA;
     var h = '<div><b>' + (l ? l.nome + (l.casa ? ' · Casa' : ' · Sessione fuori casa') : 'Nessun luogo scelto') + '</b><small>';
-    if (!l) h += 'Scegli il luogo per usare il meteo.';
+    if (!l) h += 'Scegli il luogo nel Setup per usare il meteo.';
     else if (errore) h += 'Meteo non raggiungibile: uso i valori standard. Stile ' + C.STILI[st.stile].nome + '.';
     else if (!info) h += 'Controllo il meteo…';
     else if (st.fonte === 'storico') h += 'Medie del ' + info.anno + ' · stile ' + C.STILI[st.stile].nome + '.';
     else h += 'Previsioni di oggi, ora ' + Math.round(info.live.adesso.t) + ' °C fuori · stile ' + C.STILI[st.stile].nome + '.';
     var mo = info && info.motivi[month]; if (mo && (st.fonte === 'storico' || month === today.getMonth() + 1)) h += ' ' + mo;
-    els.meteo.innerHTML = h + '</small></div><a class="back" href="meteo.html">Luogo</a>';
+    els.meteo.innerHTML = h + '</small></div><a class="back" href="setup.html?p=1">' + (l ? 'Cambia' : 'Scegli') + '</a>';
     var f = Object.keys(C.STILI);
-    els.fonte.innerHTML = '<div class="seg" role="group" aria-label="Stile">' + f.map(function (x) { return '<button type="button" data-stile="' + x + '" aria-pressed="' + (x === st.stile) + '">' + C.STILI[x].nome + '</button>'; }).join('') + '</div><p class="sm" style="margin:0 4px 10px">' + C.STILI[st.stile].d + '</p>';
+    var sist = '';
+    if (key === 'inverno' && window.ENERGIA) { var f0 = window.ENERGIA.load().fonte; sist = '<div class="fld" style="margin:6px 4px 0">Cosa usi per scaldare' + U.aiuto('sistema') + '</div><div class="seg" role="group" aria-label="Sistema"><button type="button" data-sis="elettrica" aria-pressed="' + (f0 !== 'gas') + '">Condizionatore</button><button type="button" data-sis="gas" aria-pressed="' + (f0 === 'gas') + '">Caldaia</button></div>'; }
+    els.fonte.innerHTML = sist + '<div class="fld" style="margin:10px 4px 0">Stile</div><div class="seg" role="group" aria-label="Stile">' + f.map(function (x) { return '<button type="button" data-stile="' + x + '" aria-pressed="' + (x === st.stile) + '">' + C.STILI[x].nome + '</button>'; }).join('') + '</div><p class="sm" style="margin:0 4px 10px">' + C.STILI[st.stile].d + '</p>';
   }
   function paint() {
     U.applyHue(U.hueFor(S.MESI[month].media));
@@ -139,11 +144,13 @@
       '<p class="sm" style="text-align:center;margin-top:8px">Valori indicativi per un appartamento a Roma.' + (sis === 'caldaia' ? ' La mandata consigliata è una stima: se la tua caldaia ha una curva climatica, vale quella dell’installatore.' : '') + '</p>';
     els.chips = document.getElementById('chips'); els.hero = document.getElementById('hero'); els.now = document.getElementById('now'); els.meteo = document.getElementById('meteo'); els.fonte = document.getElementById('fonte'); els.cons = document.getElementById('cons'); els.fer = document.getElementById('fer'); els.we = document.getElementById('we');
     chips();
-    els.chips.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; month = +b.getAttribute('data-m'); paint(); });
+    els.chips.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; month = b.hasAttribute('data-oggi') ? today.getMonth() + 1 : +b.getAttribute('data-m'); chips(); paint(); var on = els.chips.querySelector('[aria-pressed=true]'); if (on && on.scrollIntoView) { try { on.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch (x) {} } });
     paint(); U.nav(key);
     if (window.CLIMA) {
       els.fonte.addEventListener('click', function (e) {
         var b = e.target.closest('button'); if (!b) return;
+        if (b.hasAttribute('data-sis')) { var en = window.ENERGIA.load(); en.fonte = b.getAttribute('data-sis'); en.consiglio = null; window.ENERGIA.save(en); sis = calcSis(); perDati = sis === 'caldaia' ? 'caldaia' : key; build(); return; }
+        if (!b.hasAttribute('data-stile')) return;
         var C = window.CLIMA, st = C.load(); st.stile = b.getAttribute('data-stile'); C.save(st); aggiorna();
       });
       if (window.ENERGIA) window.ENERGIA.banner(els.cons, S, window.CLIMA, U, function () { paint(); });

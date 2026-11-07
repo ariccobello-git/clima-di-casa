@@ -1,6 +1,8 @@
 (function () {
   var SB = window.SB, U = window.UI, app = document.getElementById('app');
-  var st = { v: 'login', nomi: null, nome: '', msg: '', bad: false, tel: '+39 ', busy: false };
+  var st = { v: 'login', nomi: null, nome: '', msg: '', bad: false, tel: '+39 ', busy: false, inv: false };
+  // Link di invito: accesso.html?u=Nome. Il nome è già scelto; la password arriva nel messaggio dell'amministratore, mai nel link.
+  var invNome = (function () { try { var m = /[?&]u=([^&]+)/.exec(location.search); return m ? decodeURIComponent(m[1]).slice(0, 30) : ''; } catch (e) { return ''; } })();
   function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function m() { return st.msg ? '<p class="' + (st.bad ? 'err' : 'ok') + '" role="status">' + esc(st.msg) + '</p>' : ''; }
   function say(t, bad) { st.msg = t; st.bad = !!bad; st.busy = false; render(); }
@@ -8,6 +10,7 @@
 
   function render() {
     var h = '<div><h1>Snug Save</h1><p>Scegli il tuo nome e inserisci la password di 6 cifre.</p></div>';
+    if (st.inv && st.v === 'login') h += '<section class="card"><b>Benvenuto, ' + esc(st.nome) + '</b><p class="sm">Sei stato invitato su Snug Save. Inserisci la password che hai ricevuto nel messaggio e tocca Accedi.</p></section>';
     if (st.nomi === null) h += '<section class="card"><p class="sm">Carico…</p>' + m() + '</section>';
     else if (st.v === 'login') {
       h += '<section class="card"><div class="chips wrap" role="group" aria-label="Nome">' + st.nomi.map(function (n) { return '<button type="button" class="chip u" data-nome="' + esc(n) + '" aria-pressed="' + (n === st.nome) + '">' + esc(n) + '</button>'; }).join('') + '</div>' +
@@ -25,11 +28,14 @@
         '<button class="btn" id="conf" type="button"' + (st.busy ? ' disabled' : '') + '>Cambia password</button><button class="btn sec2" id="back" type="button">Indietro</button></section>';
     }
     h += '<p class="sm" style="text-align:center"><a href="guida-reset.html">Guida al reset della password</a></p>';
+    var lg = window.I18N ? window.I18N.lingua() : 'it', LN = { it: 'Italiano', en: 'English', fr: 'Fran\u00e7ais' };
+    h += '<div class="lgs" role="group" aria-label="Lingua">' + ['it', 'en', 'fr'].map(function (l) { return '<button type="button" lang="' + l + '" data-lang="' + l + '" aria-pressed="' + (lg === l) + '">' + LN[l] + '</button>'; }).join('') + '</div>';
     app.innerHTML = h; U.applyHue(235);
   }
 
   app.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b || b.disabled) return;
+    if (b.hasAttribute('data-lang')) { if (window.I18N) { window.I18N.imposta(b.getAttribute('data-lang')); location.reload(); } return; }
     if (b.hasAttribute('data-nome')) { st.nome = b.getAttribute('data-nome'); st.msg = ''; var pw = document.getElementById('pw'); render(); document.getElementById('pw').focus(); return; }
     if (b.id === 'go') {
       var p = document.getElementById('pw').value;
@@ -39,6 +45,7 @@
       SB.rpc('accedi', { p_nome: st.nome, p_pwd: p }).then(function (r) {
         if (r.token) {
           SB.set(r.token, r.nome, r.admin);
+          if (st.inv) { try { localStorage.setItem('clima.guida', '1'); } catch (x) {} }
           window.VAULT.unlock(r.nome, p).then(function () { location.replace('index.html'); })
             .catch(function () { SB.clear(); say('Questo browser non supporta la protezione dei dati. Aggiorna Safari.', true); });
         }
@@ -63,6 +70,10 @@
     }
   });
   render();
-  SB.rpc('elenco_nomi').then(function (n) { st.nomi = n || []; if (!st.nomi.length) st.msg = 'Nessun account creato.'; render(); })
+  SB.rpc('elenco_nomi').then(function (n) {
+    st.nomi = n || []; if (!st.nomi.length) st.msg = 'Nessun account creato.';
+    if (invNome) { var t = st.nomi.filter(function (x) { return String(x).toLowerCase() === invNome.toLowerCase(); })[0]; if (t) { st.nome = t; st.inv = true; } }
+    render(); if (st.inv) { var pw = document.getElementById('pw'); if (pw && pw.focus) try { pw.focus(); } catch (x) {} }
+  })
     .catch(function () { st.nomi = []; say('Collegamento non riuscito. Riprova.', true); });
 })();

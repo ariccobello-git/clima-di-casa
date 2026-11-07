@@ -14,6 +14,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="style.css">
 <script src="supa.js"></script>
+<script src="i18n.js"></script>
+<script src="i18n-data.js"></script>
 <script src="vault.js"></script>
 <script src="gate.js"></script>
 </head>
@@ -33,15 +35,18 @@
   }
   var hasPlace = !!window.CLIMA.luogo(), hasCasa = window.ENERGIA.ok(window.ENERGIA.load()) || window.ENERGIA.load().gasSmc > 0;
   var start = (hasPlace && hasCasa) ? '' : '<section class="card"><b>Prima di iniziare</b><p class="sm">Un minuto per indicare dove sei e com\u2019\u00e8 la tua casa. Senza, vedi solo valori medi.</p><a class="btn" href="setup.html">Completa il Setup</a></section>';
+  var inst = (window.navigator && navigator.standalone) || (window.matchMedia && matchMedia('(display-mode: standalone)').matches), guida = '';
+  try { if (localStorage.getItem('clima.guida') === '1' && inst) localStorage.removeItem('clima.guida'); if (localStorage.getItem('clima.guida') === '1') guida = '<section class="card"><b>Usa come App Snug Save sulla Home</b><p class="sm">Tocca Condividi in basso in Safari, poi Aggiungi alla schermata Home. Si apre come una vera app, con la sua icona.</p><button type="button" class="btn sec2" id="gok">Fatto</button></section>'; } catch (e) {}
   document.getElementById('app').innerHTML =
-    '<div class="hd" style="justify-content:flex-end"><a class="back" href="setup.html" aria-label="Setup">' + U.I('gear') + '</a><a class="back" href="account.html" aria-label="Account">' + U.I('shield') + '</a></div>' +
-    '<div><p>' + new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) + '</p><h1>Snug Save</h1><p>Scegli la stagione per vedere le temperature da impostare mese per mese.</p></div>' +
-    '<div style="height:10px"></div>' + start + '<div id="cons"></div>' +
+    U.pills() +
+    '<div><p>' + new Date().toLocaleDateString(window.I18N ? window.I18N.loc() : 'it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) + '</p><h1>Snug Save</h1><p>Scegli la stagione per vedere le temperature da impostare mese per mese.</p></div>' +
+    '<div style="height:10px"></div>' + guida + start + '<div id="cons"></div>' +
     sec('w', 'inverno.html', 'snow', 'Inverno', 'Riscaldamento da novembre ad aprile', '<span class="bd">19–20 °C</span><span class="bd">Caldo</span>', now === 'inverno') +
     sec('s', 'estate.html', 'sun', 'Estate', 'Raffrescamento da giugno a settembre', '<span class="bd">26–27 °C</span><span class="bd">Freddo</span>', now === 'estate') +
     '<div class="cmds"><a class="cm" href="consigli.html"><i class="ab">' + U.I('bulb') + '</i><b>Consigli di risparmio</b><small>Inverno ed estate</small></a>' +
     '<a class="cm" href="energia.html"><i class="ab">' + U.I('flame') + '</i><b>Energia</b><small>Elettrica o gas: cosa conviene</small></a></div>' +
     '<p class="sm" style="text-align:center;margin-top:8px">Acceso solo quando sei in casa, spento fuori casa e di notte.</p>';
+  var gok = document.getElementById('gok'); if (gok) gok.addEventListener('click', function () { try { localStorage.removeItem('clima.guida'); } catch (e) {} gok.closest('section').remove(); });
   window.ENERGIA.banner(document.getElementById('cons'), S, window.CLIMA, U);
   U.nav('home');
 })();

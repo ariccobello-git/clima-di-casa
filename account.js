@@ -1,8 +1,14 @@
 (function () {
   var SB = window.SB, U = window.UI, app = document.getElementById('app');
-  var me = SB.me() || { nome: '', admin: false }, users = null, st = { msg: '', bad: false, open: null, nuova: null, conf: null, add: { nome: '', tel: '+39 ', pwd: '' }, av: { t: '', x: '' }, avm: '' };
+  var me = SB.me() || { nome: '', admin: false }, users = null, st = { msg: '', bad: false, open: null, nuova: null, conf: null, add: { nome: '', tel: '+39 ', pwd: '' }, av: { t: '', x: '' }, avm: '', inv: null };
   function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function gen() { var a = new Uint32Array(1); (window.crypto || window.msCrypto).getRandomValues(a); return String(a[0] % 1000000).padStart(6, '0'); }
+  // Invito su WhatsApp: si apre WhatsApp con il messaggio già scritto, l'amministratore preme Invia. Funziona solo con nome, numero e password appena creati.
+  function invito(nome, tel, pwd) {
+    var url = new URL('accesso.html', location.href).href.split('?')[0].split('#')[0] + '?u=' + encodeURIComponent(nome);
+    var t = 'Ciao ' + nome + ', ti ho creato un account su Snug Save: l\u2019app che ti dice a quanti gradi impostare condizionatore e caldaia, mese per mese.\n\n1) Apri questo link: ' + url + '\n2) Entra con la password: ' + pwd + '\n3) Per averla come app: tocca Condividi, poi Aggiungi alla schermata Home.\n\nPuoi cambiare la password da Account.';
+    return 'https://wa.me/' + String(tel || '').replace(/\D/g, '') + '?text=' + encodeURIComponent(t);
+  }
   function say(t, bad) { st.msg = t; st.bad = !!bad; render(); }
   function msg() { return st.msg ? '<p class="' + (st.bad ? 'err' : 'ok') + '" role="status">' + esc(st.msg) + '</p>' : ''; }
   var E = { nome: 'Nome da 2 a 30 caratteri.', password: 'La password deve avere 6 cifre.', telefono: 'Numero non valido: serve il prefisso, per esempio +39…', esistente: 'Esiste già un account con questo nome.', se_stesso: 'Non puoi eliminare il tuo account.', vecchia: 'La password attuale non è corretta.', formato: 'La nuova password deve avere 6 cifre.', sessione: 'Sessione scaduta: accedi di nuovo.' };
@@ -15,14 +21,20 @@
         '<span class="rw">' + (u.bloccato ? '<button class="chip" data-a="sblocca" data-id="' + u.id + '">Sblocca</button>' : '') +
         '<button class="chip" data-a="pwd" data-id="' + u.id + '">Nuova password</button><button class="chip" data-a="tel" data-id="' + u.id + '">Telefono</button>' +
         (u.nome === me.nome ? '' : '<button class="chip" data-a="del" data-id="' + u.id + '">' + (st.conf === u.id ? 'Conferma elimina' : 'Elimina') + '</button>') + '</span>';
-      if (st.nuova && st.nuova.id === u.id) h += '<div style="flex-basis:100%"><p class="ok">Nuova password di ' + esc(u.nome) + ': <span class="cd">' + esc(st.nuova.p) + '</span><br><span class="wh">Comunicala all’utente. Non verrà più mostrata. Con una nuova password i dati personali salvati sul suo telefono (casa, indirizzo, prezzi) vanno reinseriti.</span></p></div>';
+      if (st.nuova && st.nuova.id === u.id) h += '<div style="flex-basis:100%"><p class="ok">Nuova password di ' + esc(u.nome) + ': <span class="cd">' + esc(st.nuova.p) + '</span><br><a class="btn sm2" href="' + invito(u.nome, u.telefono, st.nuova.p) + '" target="_blank" rel="noopener">Invia su WhatsApp</a><br><span class="wh">Comunicala all’utente. Non verrà più mostrata. Con una nuova password i dati personali salvati sul suo telefono (casa, indirizzo, prezzi) vanno reinseriti.</span></p></div>';
       if (st.open === u.id) h += '<div style="flex-basis:100%"><input class="in" id="nt" type="tel" value="' + esc(u.telefono) + '" aria-label="Telefono"><button class="btn sm2" data-a="savetel" data-id="' + u.id + '">Salva numero</button></div>';
       return h + '</li>';
     }).join('') + '</ul>';
   }
 
   function render() {
-    var h = '<div><h1>Account</h1><p>' + esc(me.nome) + (me.admin ? ' · amministratore' : '') + '</p></div>';
+    var h = '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div><div><h1>Account</h1><p>' + esc(me.nome) + (me.admin ? ' · amministratore' : '') + '</p></div>';
+    var LN = { it: 'Italiano', en: 'English', fr: 'Fran\u00e7ais' }, tid = U.temaId(), lg = window.I18N ? window.I18N.lingua() : 'it';
+    h += '<h2>Aspetto</h2><section class="card"><b>Colore</b><div class="tms" role="group" aria-label="Colore">' + U.TEMI.map(function (t) {
+      var sw = t.h === null ? 'linear-gradient(135deg,hsl(215 82% 44%),hsl(25 88% 52%))' : 'linear-gradient(135deg,hsl(' + t.h + ' ' + Math.round(82 * t.sat) + '% 46%),hsl(' + ((t.h + 344) % 360) + ' ' + Math.round(80 * t.sat) + '% 36%))';
+      return '<button type="button" class="tm" data-tema="' + t.id + '" aria-pressed="' + (tid === t.id) + '"><i style="background:' + sw + '"></i>' + t.nome + '</button>';
+    }).join('') + '</div><p class="sm">Automatico cambia colore con il mese: blu d\u2019inverno, arancio d\u2019estate.</p>' +
+      '<b style="display:block;margin-top:14px">Lingua</b><div class="seg" role="group" aria-label="Lingua">' + ['it', 'en', 'fr'].map(function (l) { return '<button type="button" lang="' + l + '" data-lang="' + l + '" aria-pressed="' + (lg === l) + '">' + LN[l] + '</button>'; }).join('') + '</div></section>';
     h += '<section class="card"><b>Cambia password</b><input class="in pin" id="old" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="Attuale" aria-label="Password attuale">' +
       '<input class="in pin" id="new" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="Nuova" aria-label="Nuova password">' + (me.admin ? '' : msg()) +
       '<button class="btn" data-a="chg">Cambia password</button><button class="btn sec2" data-a="out">Esci</button></section>' +
@@ -33,7 +45,8 @@
         '<h2>Nuovo utente</h2><section class="card"><input class="in" id="an" placeholder="Nome" value="' + esc(st.add.nome) + '" aria-label="Nome" maxlength="30">' +
         '<input class="in" id="at" type="tel" placeholder="Telefono" value="' + esc(st.add.tel) + '" aria-label="Telefono">' +
         '<input class="in pin" id="ap" type="text" inputmode="numeric" maxlength="6" placeholder="Password" value="' + esc(st.add.pwd) + '" aria-label="Password"><button class="btn sec2" data-a="gen">Genera password</button>' +
-        '<button class="btn" data-a="add">Crea utente</button><p class="sm">Comunica nome e password all’utente. Dopo la creazione la password non è più visibile a nessuno.</p></section>';
+        '<button class="btn" data-a="add">Crea utente</button><p class="sm">Dopo la creazione puoi inviare l’invito su WhatsApp con il link e la password. Poi la password non è più visibile a nessuno.</p></section>' +
+        (st.inv ? '<section class="card"><b>Utente ' + esc(st.inv.nome) + ' creato</b><p class="sm">Si apre WhatsApp con il messaggio pronto: premi Invia. Il messaggio contiene il link e la password.</p><a class="btn" href="' + invito(st.inv.nome, st.inv.tel, st.inv.pwd) + '" target="_blank" rel="noopener">Invia su WhatsApp</a><p class="sm">Chi lo riceve apre il link, entra con la password e può aggiungere l’app alla Home. Da questa schermata la password non si potrà più rivedere.</p></section>' : '');
     }
     h += '<div class="cmds"><a class="cm" href="guida-reset.html"><i class="ab">' + U.I('shield') + '</i><b>Guida al reset</b><small>Password dimenticata</small></a></div>';
     app.innerHTML = h; U.applyHue(235); U.nav('account');
@@ -43,6 +56,9 @@
   function tok() { return SB.tok(); }
 
   app.addEventListener('click', function (e) {
+    var bt = e.target.closest('button');
+    if (bt && bt.hasAttribute('data-tema')) { U.setTema(bt.getAttribute('data-tema')); render(); return; }
+    if (bt && bt.hasAttribute('data-lang')) { if (window.I18N) { window.I18N.imposta(bt.getAttribute('data-lang')); location.reload(); } return; }
     var b = e.target.closest('button'); if (!b || !b.hasAttribute('data-a')) return;
     var a = b.getAttribute('data-a'), id = b.getAttribute('data-id') && +b.getAttribute('data-id');
     if (me.admin && document.getElementById('an')) st.add = { nome: document.getElementById('an').value, tel: document.getElementById('at').value, pwd: document.getElementById('ap').value };
@@ -63,7 +79,7 @@
     } else if (a === 'gen') { st.add.pwd = gen(); render(); }
     else if (a === 'add') {
       var d = st.add; SB.rpc('admin_crea', { tok: tok(), p_nome: d.nome, p_pwd: d.pwd, p_tel: SB.norm(d.tel) }).then(function (r) {
-        if (r.ok) { st.add = { nome: '', tel: '+39 ', pwd: '' }; st.msg = 'Utente creato.'; st.bad = false; carica(); } else say(E[r.errore] || 'Errore.', true);
+        if (r.ok) { st.inv = { nome: d.nome.trim(), tel: SB.norm(d.tel), pwd: d.pwd }; st.add = { nome: '', tel: '+39 ', pwd: '' }; st.msg = 'Utente creato.'; st.bad = false; carica(); } else say(E[r.errore] || 'Errore.', true);
       }).catch(function () { say('Collegamento non riuscito.', true); });
     } else if (a === 'sblocca') SB.rpc('admin_sblocca', { tok: tok(), p_id: id }).then(function () { st.msg = 'Sbloccato.'; st.bad = false; carica(); });
     else if (a === 'pwd') SB.rpc('admin_nuova_password', { tok: tok(), p_id: id }).then(function (r) { st.nuova = { id: id, p: r.password }; st.msg = ''; carica(); }).catch(function () { say('Operazione non riuscita.', true); });

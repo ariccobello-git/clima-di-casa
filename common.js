@@ -52,16 +52,27 @@
     return !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
   }
   var H = 215;
+  // Temi colore: "auto" segue il mese (freddo = blu, caldo = arancio); gli altri fissano un colore. sat = quanto è vivo (grafite è quasi grigio).
+  var TEMI = [
+    { id: 'auto', nome: 'Automatico', h: null, sat: 1 }, { id: 'blu', nome: 'Blu', h: 215, sat: 1 }, { id: 'turchese', nome: 'Turchese', h: 185, sat: 1 },
+    { id: 'verde', nome: 'Verde', h: 145, sat: 1 }, { id: 'arancio', nome: 'Arancio', h: 25, sat: 1 }, { id: 'rosso', nome: 'Rosso', h: 355, sat: 1 },
+    { id: 'rosa', nome: 'Rosa', h: 325, sat: 1 }, { id: 'viola', nome: 'Viola', h: 268, sat: 1 }, { id: 'grafite', nome: 'Grafite', h: 220, sat: 0.14 }
+  ];
+  function temaId() { try { var t = localStorage.getItem('clima.tema'); return TEMI.some(function (x) { return x.id === t; }) ? t : 'auto'; } catch (e) { return 'auto'; } }
+  function setTema(id) { try { localStorage.setItem('clima.tema', id); } catch (e) {} applyHue(H, true); }
   function w(x) { return ((Math.round(x) % 360) + 360) % 360; }
-  function applyHue(h) {
-    H = h; var d = isDark(), r = document.documentElement, st = r.style;
+  function applyHue(h, forza) {
+    var tm = TEMI.filter(function (x) { return x.id === temaId(); })[0], K = 1;
+    if (!forza) H = h; else h = H;
+    if (tm && tm.h !== null) { h = tm.h; K = tm.sat; }
+    var d = isDark(), r = document.documentElement, st = r.style; r.setAttribute('data-tema', tm ? tm.id : 'auto');
     r.classList.toggle('dk', d);
     st.setProperty('--h', w(h));
-    st.setProperty('--g1', 'hsl(' + w(h) + ' 82% 44%)'); st.setProperty('--g2', 'hsl(' + w(h - 16) + ' 80% 38%)'); st.setProperty('--g3', 'hsl(' + w(h - 34) + ' 76% 32%)');
-    st.setProperty('--pri', d ? 'hsl(' + w(h) + ' 92% 68%)' : 'hsl(' + w(h) + ' 86% 34%)');
+    st.setProperty('--g1', 'hsl(' + w(h) + ' ' + Math.round(82 * K) + '% 44%)'); st.setProperty('--g2', 'hsl(' + w(h - 16) + ' ' + Math.round(80 * K) + '% 38%)'); st.setProperty('--g3', 'hsl(' + w(h - 34) + ' ' + Math.round(76 * K) + '% 32%)');
+    st.setProperty('--pri', d ? 'hsl(' + w(h) + ' ' + Math.round(92 * K) + '% 68%)' : 'hsl(' + w(h) + ' ' + Math.round(86 * K) + '% 34%)');
     var L = d ? [26, 22, 24, 20] : [78, 82, 84, 80], S = d ? [60, 55, 60, 50] : [92, 88, 90, 70];
-    [0, 40, -35, 80].forEach(function (o, i) { st.setProperty('--o' + (i + 1), 'hsl(' + w(h + o) + ' ' + S[i] + '% ' + L[i] + '%)'); });
-    st.setProperty('--bg', d ? 'hsl(' + w(h) + ' 35% 6%)' : 'hsl(' + w(h) + ' 45% 96%)');
+    [0, 40, -35, 80].forEach(function (o, i) { st.setProperty('--o' + (i + 1), 'hsl(' + w(h + (K < 1 ? 0 : o)) + ' ' + Math.round(S[i] * K) + '% ' + L[i] + '%)'); });
+    st.setProperty('--bg', d ? 'hsl(' + w(h) + ' ' + Math.round(35 * K) + '% 6%)' : 'hsl(' + w(h) + ' ' + Math.round(45 * K) + '% 96%)');
     var m = document.querySelector('meta[name=theme-color]'); if (m) m.content = d ? '#07070d' : '#eef0f8';
   }
   try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { applyHue(H); }); } catch (e) {}
@@ -78,5 +89,26 @@
   }
   // Quando cambiano le novità la barra si ridisegna da sola.
   window.addEventListener('novita', function () { if (navAct !== null) nav(navAct); });
-  window.UI = { meteo: meteo, I: I, hueFor: hueFor, applyHue: applyHue, nav: nav };
+  // Pulsanti in alto con icona e parola (prima erano solo icone): Novità, Setup, Account.
+  function pills() {
+    var n = window.NOVITA ? window.NOVITA.conteggio() : 0;
+    function p(href, ic, t, b) { return '<a class="pl" href="' + href + '">' + I(ic) + '<span>' + t + '</span>' + (b ? '<b class="bdg2" aria-label="' + b + '">' + b + '</b>' : '') + '</a>'; }
+    return '<div class="pls">' + p('novita.html', 'bell', 'Novit\u00e0', n) + p('setup.html', 'gear', 'Setup') + p('account.html', 'shield', 'Account') + '</div>';
+  }
+  // Spiegazioni al tocco: un "?" accanto al termine tecnico apre una riga di testo.
+  var AIUTI = {
+    smc: 'Smc significa standard metro cubo: è l\u2019unit\u00e0 con cui il gas \u00e8 scritto in bolletta.',
+    mandata: 'La mandata \u00e8 la temperatura dell\u2019acqua che la caldaia manda ai termosifoni. Pi\u00f9 \u00e8 bassa, pi\u00f9 la caldaia a condensazione risparmia.',
+    pompa: 'La pompa di calore \u00e8 il condizionatore in modalit\u00e0 Caldo: sposta il calore da fuori a dentro e usa poca elettricit\u00e0.',
+    sistema: 'Dice con cosa scaldi casa. Cambiandolo cambiano anche il consiglio nella pagina Energia e i valori da impostare.'
+  };
+  function aiuto(k) { return '<button type="button" class="qm" data-help="' + k + '" aria-label="Spiegazione" aria-expanded="false">?</button>'; }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('button[data-help]'); if (!b) return;
+    var nx = b.nextElementSibling, aperto = b.getAttribute('aria-expanded') === 'true';
+    if (nx && nx.classList && nx.classList.contains('hlp')) nx.remove();
+    b.setAttribute('aria-expanded', aperto ? 'false' : 'true');
+    if (!aperto) { var d = document.createElement('div'); d.className = 'hlp'; d.setAttribute('role', 'note'); d.textContent = AIUTI[b.getAttribute('data-help')] || ''; b.insertAdjacentElement('afterend', d); }
+  });
+  window.UI = { meteo: meteo, I: I, hueFor: hueFor, applyHue: applyHue, nav: nav, pills: pills, aiuto: aiuto, TEMI: TEMI, temaId: temaId, setTema: setTema };
 })();

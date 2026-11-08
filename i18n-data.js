@@ -1,6 +1,22 @@
 /* Dizionario en/fr generato: chiave = testo italiano normalizzato (# numeri, {M} mesi, {W} giorni) */
 (function(){var I=window.I18N;if(!I)return;
 I.aggiungi({
+"Intervallo realistico per la stagione: da # € a # €.": [
+"Realistic range for the season: from # € to # €.",
+"Fourchette réaliste pour la saison : de # € à # €."
+],
+"La stima è tarata sul gas della tua bolletta: lo scarto atteso è di circa il #%.": [
+"The estimate is calibrated on the gas from your bill: the expected margin is about #%.",
+"L’estimation est calée sur le gaz de votre facture : l’écart attendu est d’environ #\u00a0%."
+],
+"È una stima: lo scarto atteso è di circa il #%.": [
+"This is an estimate: the expected margin is about #%.",
+"Ceci est une estimation : l’écart attendu est d’environ #\u00a0%."
+],
+"Inserisci nel Setup il gas della bolletta per ridurlo.": [
+"Enter the gas from your bill in Setup to reduce it.",
+"Saisissez dans Réglages le gaz de votre facture pour le réduire."
+],
 "Scegli il tuo nome e inserisci la password di # cifre.": [
 "Choose your name and enter your #-digit password.",
 "Choisissez votre nom et saisissez votre mot de passe à # chiffres."

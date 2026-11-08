@@ -84,27 +84,13 @@
     els.hero.innerHTML = '<div style="min-width:0"><small>' + (sis === 'caldaia' ? 'Termostato di ' : 'Temperatura di ') + d.nome + '</small><span class="big tn">' + (t === null ? 'Spento' : t + ' °C') + '</span><span class="amt">' + riga + '</span>' + fonteBadge() + '</div><div class="wm">' + U.I(emb) + '</div>';
   }
 
-  function nowCard() {
-    var el = els.now;
-    if (!active) { el.style.display = 'none'; return; }
-    var tipo = S.tipoOggi(today), m = today.getMonth() + 1;
-    var p = S.at(m, tipo, today.getHours() * 60 + today.getMinutes(), sis);
-    el.style.display = '';
-    el.innerHTML = (p.temp === null ? '<div class="nw off">Spento</div>' : '<div class="nw' + (p.rid ? ' off' : ' tn') + '">' + p.temp + ' °C</div>') +
-      '<div><b>Adesso · ' + p.label + '</b><small>' + p.hint + '. ' + (tipo === 'we' ? 'Oggi è weekend.' : 'Oggi è un giorno lavorativo.') + ' Se è festivo, guarda il riquadro Weekend.</small></div>';
-  }
-
   function azione() {
     var el = els.azione; if (!el) return;
     if (!active) { el.style.display = 'none'; return; }
-    var C = window.CLIMA, tf = (info && info.live && info.live.adesso) ? Math.round(info.live.adesso.t) : Math.round(S.MESI[today.getMonth() + 1].media);
-    el.style.display = ''; el.innerHTML = window.AZIONE.azione({ S: S, key: key, sis: sis, today: today, tf: tf, stile: C ? C.load().stile : 'bilanciato' });
-  }
-  var mkt = null, mktCaricato = false;
-  function conv() {
-    var el = els.conv; if (!el) return;
-    if (key === 'inverno' && window.ENERGIA && !mktCaricato) { mktCaricato = true; window.ENERGIA.mercato().then(function (m) { mkt = m; conv(); }).catch(function () { mkt = null; conv(); }); }
-    el.style.display = ''; el.innerHTML = window.AZIONE.conv({ S: S, key: key, month: month, today: today, mkt: mkt });
+    var C = window.CLIMA, st = C ? C.load() : { stile: 'bilanciato', fonte: 'live' };
+    var live = st.fonte === 'live' && info && info.live && info.live.adesso;
+    var tf = live ? Math.round(info.live.adesso.t) : Math.round(S.MESI[today.getMonth() + 1].media);
+    el.style.display = ''; el.innerHTML = window.AZIONE.azione({ S: S, key: key, sis: sis, today: today, tf: tf, stile: st.stile, live: !!live, anno: C ? C.annoScorso() : '' });
   }
 
   function chips() {
@@ -135,7 +121,7 @@
   function paint() {
     U.applyHue(U.hueFor(S.MESI[month].media));
     Array.prototype.forEach.call(els.chips.children, function (c) { c.setAttribute('aria-pressed', +c.getAttribute('data-m') === month ? 'true' : 'false'); });
-    hero(); azione(); conv(); nowCard(); card('fer'); card('we'); if (window.CLIMA) banner();
+    hero(); azione(); card('fer'); card('we'); if (window.CLIMA) banner();
   }
 
   function aggiorna() {
@@ -149,14 +135,14 @@
       '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a><span class="emb" aria-hidden="true">' + U.I(emb) + '</span></div>' +
       '<div><h1>' + cfg.nome + '</h1><p>' + (sis === 'caldaia' ? 'Scegli il mese. Imposta il termostato ambiente: la caldaia parte da sola solo quando serve.' : 'Scegli il mese. Accendi il condizionatore (modalità ' + cfg.modo + ') solo quando sei in casa. Spegnilo quando esci e di notte.') + '</p></div>' +
       '<div class="chips" id="chips" role="group" aria-label="Mese"></div>' +
-      '<div id="hero"></div><div class="al" id="azione" aria-live="polite"></div><div class="al" id="conv"></div><div id="cons"></div><div class="al" id="meteo"></div><div id="fonte"></div><div class="al" id="now" aria-live="polite"></div>' +
+      '<section class="fare" id="azione" aria-live="polite"></section><div id="hero"></div><div id="cons"></div><div class="al" id="meteo"></div><div id="fonte"></div>' +
       '<section class="card" id="fer"></section><section class="card" id="we"></section>' +
       '<h2>Perché questi valori</h2><section class="card"><ul class="rules">' + perche[perDati].map(function (r) { return '<li>' + U.I(r[0]) + '<span>' + r[1] + '</span></li>'; }).join('') + '</ul></section>' +
       '<h2>Per farlo bene</h2><section class="card"><ul class="rules">' + regole[perDati].map(function (r) { return '<li>' + U.I(r[0]) + '<span>' + r[1] + '</span></li>'; }).join('') + '</ul></section>' +
       '<div class="cmds"><a class="cm" href="consigli.html"><i class="ab">' + U.I('bulb') + '</i><b>Consigli di risparmio</b><small>Come spendere il meno possibile</small></a>' +
       (key === 'inverno' ? '<a class="cm" href="spiegazione.html"><i class="ab">' + U.I('bolt') + '</i><b>Perché elettrico e non gas</b><small>Costi a confronto</small></a>' : '<a class="cm" href="' + other[0] + '"><i class="ab">' + U.I(other[2]) + '</i><b>' + other[1] + '</b><small>Temperature da novembre ad aprile</small></a>') + '</div>' +
       '<p class="sm" style="text-align:center;margin-top:8px">Valori indicativi per un appartamento a Roma.' + (sis === 'caldaia' ? ' La mandata consigliata è una stima: se la tua caldaia ha una curva climatica, vale quella dell’installatore.' : '') + '</p>';
-    els.chips = document.getElementById('chips'); els.hero = document.getElementById('hero'); els.now = document.getElementById('now'); els.meteo = document.getElementById('meteo'); els.fonte = document.getElementById('fonte'); els.cons = document.getElementById('cons'); els.azione = document.getElementById('azione'); els.conv = document.getElementById('conv'); els.fer = document.getElementById('fer'); els.we = document.getElementById('we');
+    els.chips = document.getElementById('chips'); els.hero = document.getElementById('hero'); els.meteo = document.getElementById('meteo'); els.fonte = document.getElementById('fonte'); els.cons = document.getElementById('cons'); els.azione = document.getElementById('azione');  els.fer = document.getElementById('fer'); els.we = document.getElementById('we');
     chips();
     els.chips.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; month = b.hasAttribute('data-oggi') ? today.getMonth() + 1 : +b.getAttribute('data-m'); chips(); paint(); var on = els.chips.querySelector('[aria-pressed=true]'); if (on && on.scrollIntoView) { try { on.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch (x) {} } });
     paint(); U.nav(key);

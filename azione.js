@@ -33,20 +33,29 @@
       else acts.push('Ventola in automatico, niente Turbo.');
       if (tf >= 32) acts.push('Caldo forte: tieni le tapparelle chiuse fin dalla mattina.');
     }
-    return big + '<div><b>' + tit + '</b><small>' + txt + '</small>' + (acts.length ? '<ul class="acts">' + acts.map(function (a) { return '<li>' + a + '</li>'; }).join('') + '</ul>' : '') + '</div>';
+    var I = root.UI ? root.UI.I : function () { return ''; };
+    var big2 = t === null ? '<div class="ftp off">' + I('power') + '</div>' : '<div class="ftp' + (p.rid ? ' rid' : '') + '"><b>' + t + '</b><i>°C</i></div>';
+    var pill = function (c) { return '<span class="bd">' + c + '</span>'; };
+    var STN = { risparmio: 'Risparmio', bilanciato: 'Bilanciato', comfort: 'Comfort' };
+    return '<div class="fh"><span class="fl"><i class="dot"></i>Cosa fare ora</span><span class="fo">' + p.label + '</span></div>' +
+      '<div class="fm"><div class="ftx"><b>' + tit + '</b><small>' + txt + '</small></div>' + big2 + '</div>' +
+      (acts.length ? '<ul class="fa">' + acts.map(function (a) { return '<li><span class="ck">' + I('check') + '</span><span>' + a + '</span></li>'; }).join('') + '</ul>' : '') +
+      '<div class="fp">' + pill(STN[stile] || 'Bilanciato') + pill(x.live ? 'Meteo live' : 'Anno ' + x.anno) + '</div>';
   }
-  // Quale fonte conviene nel mese (solo inverno: d'estate si raffresca sempre con l'elettricità).
+  // Quale fonte conviene nel mese (solo inverno: d'estate si raffresca sempre con l'elettricità). Card per la home.
   function conv(x) {
-    var S = x.S, E = root.ENERGIA, C = root.CLIMA, d = S.MESI[x.month], today = x.today;
-    if (x.key !== 'inverno') return '<div class="nw tn">⚡</div><div><b>In estate si rinfresca con l’elettricità</b><small>Il condizionatore in Freddo è la scelta giusta: il gas qui non c’entra.</small></div>';
-    if (E.INV.indexOf(x.month) < 0) return '<div class="nw off">—</div><div><b>In ' + d.nome.toLowerCase() + ' non serve scaldare</b></div>';
+    var S = x.S, E = root.ENERGIA, C = root.CLIMA, I = root.UI.I, d = S.MESI[x.month], today = x.today;
+    var link = function (inner) { return '<a class="enc" href="energia.html">' + inner + '<span class="go" aria-hidden="true">' + I('chev') + '</span></a>'; };
+    if (x.key !== 'inverno') return link('<span class="eic">' + I('bolt') + '</span><div class="etx"><small>Energia</small><b>In estate si rinfresca con l’elettricità</b><small>Il condizionatore in Freddo è la scelta giusta.</small></div>');
+    if (E.INV.indexOf(x.month) < 0) return link('<span class="eic">' + I('flame') + '</span><div class="etx"><small>Energia</small><b>In ' + d.nome.toLowerCase() + ' non serve scaldare</b></div>');
     var st = E.load(), tm = E.tmedDa(S, C, today), pr = E.prezzi(st, x.mkt), k = E.costi(E.caloreMese(st, x.month, tm), tm(x.month), pr);
-    var best = k.elettrica <= k.gas ? 'elettrica' : 'gas', v = E.verdetto(st.fonte, k), b = E.etichetta(best), us = E.etichetta(st.fonte);
-    var eur = function (n) { return Math.round(n) + ' €'; };
-    return '<div class="nw tn">' + b.sym + '</div><div><b>In ' + d.nome.toLowerCase() + ' conviene: ' + b.nome.toLowerCase() + '</b>' +
-      '<small>Costo per scaldare nel mese: gas ' + eur(k.gas) + ', elettrica ' + eur(k.elettrica) + '.</small>' +
-      (v.cambia ? '<small class="warn">Stai usando ' + us.nome.toLowerCase() + ': passando a ' + E.etichetta(v.verso).nome.toLowerCase() + ' risparmi circa ' + eur(v.risparmio) + ' al mese.</small>'
-        : '<small class="good">Stai già usando la fonte giusta.</small>') + '</div>';
+    var elBest = k.elettrica <= k.gas, best = elBest ? 'elettrica' : 'gas', v = E.verdetto(st.fonte, k), b = E.etichetta(best), us = E.etichetta(st.fonte);
+    var mx = Math.max(k.gas, k.elettrica, 1), eur = function (n) { return Math.round(n) + ' €'; };
+    var row = function (ic, nome, val, win) { return '<div class="er' + (win ? ' win' : '') + '"><span class="en">' + I(ic) + nome + '</span><span class="eb"><i style="width:' + Math.max(8, Math.round(val / mx * 100)) + '%"></i></span><span class="ev tn">' + eur(val) + '</span></div>'; };
+    var stato = v.cambia ? '<span class="est warn">' + I('bolt') + 'Stai usando ' + us.nome.toLowerCase() + ': passando a ' + E.etichetta(v.verso).nome.toLowerCase() + ' risparmi circa ' + eur(v.risparmio) + ' al mese.</span>'
+      : '<span class="est good">' + I('check') + 'Stai già usando la fonte giusta.</span>';
+    return link('<span class="eic">' + I(elBest ? 'bolt' : 'flame') + '</span><div class="etx"><small>Energia · ' + d.nome + '</small><b>' + (elBest ? 'Conviene l’elettrico' : 'Conviene il gas') + '</b>' +
+      '<div class="ebars">' + row('bolt', 'Elettrico', k.elettrica, elBest) + row('flame', 'Gas metano', k.gas, !elBest) + '</div>' + stato + '</div>');
   }
   root.AZIONE = { azione: azione, conv: conv };
 })(typeof window !== 'undefined' ? window : globalThis);

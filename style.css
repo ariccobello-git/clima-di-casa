@@ -165,4 +165,32 @@ textarea.in{padding:12px 14px;min-height:90px;line-height:1.4}
 
 .ver{text-align:center;font-size:12px;color:var(--mut,#8e8e93);opacity:.7;margin:18px 0 6px}
 
-.acts{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.4;color:var(--mut,#6b7280)}.acts li{margin:2px 0}.al small.warn{color:#b45309;font-weight:600}.al small.good{color:#1e8449;font-weight:600}
+/* Cosa fare ora (pagine stagione) */
+.fare{position:relative;overflow:hidden;border-radius:30px;padding:18px 18px 16px;margin-bottom:12px;color:#fff;background:linear-gradient(150deg,var(--g3) 0%,var(--g2) 55%,var(--g1) 100%);box-shadow:0 14px 34px color-mix(in srgb,var(--g2) 45%,transparent)}
+.fare:before{content:"";position:absolute;width:200px;height:200px;right:-60px;top:-90px;border-radius:50%;background:rgba(255,255,255,.14)}
+.fare .fh{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;font:700 12px/1 ui-rounded,-apple-system,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.fare .fl{display:inline-flex;align-items:center;gap:7px}.fare .dot{width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,.7);animation:fpul 2s infinite}
+@keyframes fpul{70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+.fare .fo{opacity:.85;text-transform:none;letter-spacing:0;font-weight:600;font-size:13px}
+.fare .fm{position:relative;display:flex;align-items:center;justify-content:space-between;gap:14px;margin:14px 0 6px}
+.fare .ftx{min-width:0}.fare .ftx b{display:block;font:800 22px/1.15 ui-rounded,-apple-system,sans-serif;letter-spacing:-.02em}.fare .ftx small{display:block;margin-top:5px;font-size:14px;color:rgba(255,255,255,.88)}
+.fare .ftp{flex:none;width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;font-family:ui-rounded,-apple-system,sans-serif}
+.fare .ftp b{font-size:30px;font-weight:800;letter-spacing:-.03em}.fare .ftp i{font-style:normal;font-size:13px;font-weight:700;margin:-12px 0 0 1px;opacity:.9}
+.fare .ftp.rid{opacity:.85}.fare .ftp.off .si{width:34px;height:34px;stroke-width:1.8}
+.fare .fa{position:relative;list-style:none;margin:8px 0 0;padding:10px 12px;border-radius:18px;background:rgba(255,255,255,.16)}
+.fare .fa li{display:flex;align-items:flex-start;gap:10px;padding:5px 0;font-size:14px;line-height:1.35}
+.fare .fa .ck{flex:none;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;margin-top:1px}.fare .fa .ck .si{width:12px;height:12px;stroke-width:2.6}
+.fare .fp{position:relative;display:flex;gap:6px;margin-top:12px}.fare .bd{background:rgba(255,255,255,.24);color:#fff}
+
+/* Energia nella dashboard */
+.enc{position:relative;display:flex;align-items:center;gap:14px;border-radius:24px;padding:16px;margin-bottom:12px;color:var(--tx);background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);border:1px solid rgba(255,255,255,.45);box-shadow:var(--sh);transition:transform .3s var(--sp)}.enc:active{transform:scale(.98)}
+.enc .eic{flex:none;align-self:flex-start;width:44px;height:44px;border-radius:15px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--pri) 14%,transparent);color:var(--pri)}
+.enc .etx{flex:1;min-width:0}.enc .etx>small{display:block;font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}.enc .etx>b{display:block;font:800 18px/1.2 ui-rounded,-apple-system,sans-serif;letter-spacing:-.02em;margin:2px 0 8px}
+.enc .go{flex:none;align-self:center;color:var(--mu);opacity:.7}.enc .go .si{width:20px;height:20px}
+.enc .ebars{display:flex;flex-direction:column;gap:7px}
+.enc .er{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:8px;font-size:13px;color:var(--mu)}
+.enc .en{display:flex;align-items:center;gap:5px;white-space:nowrap}.enc .en .si{width:14px;height:14px}
+.enc .eb{height:8px;border-radius:99px;background:var(--fill);overflow:hidden}.enc .eb i{display:block;height:100%;border-radius:99px;background:color-mix(in srgb,var(--pri) 30%,var(--fill))}
+.enc .er.win{color:var(--tx);font-weight:700}.enc .er.win .eb i{background:linear-gradient(90deg,var(--pri),color-mix(in srgb,var(--pri) 60%,#fff))}.enc .ev{text-align:right;font-weight:700}
+.enc .est{display:inline-flex;align-items:flex-start;gap:6px;margin-top:10px;padding:7px 11px;border-radius:14px;font-size:12.5px;font-weight:600;line-height:1.3}.enc .est .si{flex:none;width:14px;height:14px;margin-top:1px}
+.enc .est.good{background:rgba(30,132,73,.13);color:#1e8449}.enc .est.warn{background:rgba(217,119,6,.14);color:#b45309}

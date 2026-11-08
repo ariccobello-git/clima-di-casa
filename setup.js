@@ -34,14 +34,14 @@
     if (conf) {
       h += '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div><div><h1>Setup</h1><p>Controlla i dati inseriti.</p></div>';
       h += '<h2>Confermi questi dati?</h2><section class="card">' + riep(l, c) + (l && c.mq && c.anno ? '' : '<p class="note2">Mancano indirizzo o dati della casa: l’app userà valori medi.</p>') + '<a class="btn" href="index.html">Sì, conferma</a><button type="button" class="btn sec2" data-rivedi="1">No, rivedi</button></section>';
-      app.innerHTML = h; U.applyHue(235); U.nav('home'); return;
+      h += '<p class="ver">Snug Save · versione ' + window.SB.ver + '</p>'; app.innerHTML = h; U.applyHue(235); U.nav('home'); return;
     }
     if (l && c.mq && c.anno && !modifica) {
       h += '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div><div><h1>Setup</h1><p>Indirizzo, casa e prezzi dell’energia.</p></div>';
       h += '<h2>Setup già fatto</h2><section class="card"><p class="sm">Hai già completato il Setup. Vuoi modificarlo?</p>' + riep(l, c) +
         (chiedi ? '<p class="note2">Cancellare indirizzo, casa e prezzi? L’app tornerà ai valori medi e dovrai rifare il Setup.</p><button type="button" class="btn" data-sicanc="1">Sì, cancella</button><button type="button" class="btn sec2" data-canc="0">Annulla</button>'
           : '<button type="button" class="btn" data-mod="1">Modifica</button><button type="button" class="btn sec2" data-canc="1">Cancella</button>') + '</section>' + aspetto();
-      app.innerHTML = h; U.applyHue(235); U.nav('home'); return;
+      h += '<p class="ver">Snug Save · versione ' + window.SB.ver + '</p>'; app.innerHTML = h; U.applyHue(235); U.nav('home'); return;
     }
     h += '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div><div><h1>Setup</h1><p>Indirizzo, casa e prezzi dell’energia.</p></div>';
     h += '<div class="steps" role="progressbar" aria-valuemin="1" aria-valuemax="3" aria-valuenow="' + passo + '" aria-label="Passo ' + passo + ' di 3">' + [1, 2, 3].map(function (n) { return '<i class="' + (n <= passo ? 'on' : '') + '"></i>'; }).join('') + '</div><p class="sm" style="margin:0 2px 6px">Passo ' + passo + ' di 3 · ' + ['Dove sei', 'La casa', 'I prezzi'][passo - 1] + '</p>';
@@ -68,7 +68,7 @@
       '<a class="btn sec2" href="energia.html">Vedi il consiglio elettrico o gas</a></section></div>';
     if (passo === 1) h += aspetto();
     h += '<div class="nav2">' + (passo > 1 ? '<button type="button" class="btn sec2" data-passo="' + (passo - 1) + '">Indietro</button>' : '') + (passo < 3 ? '<button type="button" class="btn" data-passo="' + (passo + 1) + '">Avanti</button>' : '<button type="button" class="btn" data-fine="1">Fine</button>') + '</div>';
-    app.innerHTML = h; U.applyHue(235); U.nav('home');
+    h += '<p class="ver">Snug Save · versione ' + window.SB.ver + '</p>'; app.innerHTML = h; U.applyHue(235); U.nav('home');
   }
 
   function leggi() {

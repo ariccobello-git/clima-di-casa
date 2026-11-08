@@ -30,6 +30,7 @@
     h += '<p class="sm" style="text-align:center"><a href="guida-reset.html">Guida al reset della password</a></p>';
     var lg = window.I18N ? window.I18N.lingua() : 'it', LN = { it: 'Italiano', en: 'English', fr: 'Fran\u00e7ais' };
     h += '<div class="lgs" role="group" aria-label="Lingua">' + ['it', 'en', 'fr'].map(function (l) { return '<button type="button" lang="' + l + '" data-lang="' + l + '" aria-pressed="' + (lg === l) + '">' + LN[l] + '</button>'; }).join('') + '</div>';
+    h += '<p class="ver">Snug Save · versione ' + window.SB.ver + '</p>';
     app.innerHTML = h; U.applyHue(235);
   }
 

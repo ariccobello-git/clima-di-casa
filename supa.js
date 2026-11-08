@@ -18,7 +18,9 @@
     var p = (window.caches && caches.keys) ? caches.keys().then(function (k) { return Promise.all(k.map(function (x) { return caches.delete(x); })); }) : Promise.resolve();
     p.catch(function () {}).then(function () { location.replace(location.pathname + '?r=' + Date.now()); });
   }
+  var VER = '1.2 · 08/11/2026';
   window.SB = {
+    ver: VER,
     rpc: rpc, norm: norm, aggiorna: aggiorna,
     tok: function () {
       var s = ss(), t = s && s.getItem('clima.tok'); if (!t) return null;

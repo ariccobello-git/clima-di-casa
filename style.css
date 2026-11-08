@@ -162,3 +162,5 @@ textarea.in{padding:12px 14px;min-height:90px;line-height:1.4}
 .chip.oggi{background:var(--fill);color:var(--pri)}.chip.oggi .si{width:16px;height:16px}
 .lgs{display:flex;gap:6px;justify-content:center;margin:14px 0 0}.lgs button{min-height:44px;min-width:56px;border:0;border-radius:99px;background:var(--fill);color:var(--tx);font:600 14px -apple-system,sans-serif;cursor:pointer}.lgs button[aria-pressed=true]{background:var(--solid);color:var(--pri);box-shadow:0 3px 10px rgba(0,0,0,.15)}
 .wide{grid-column:1/-1}
+
+.ver{text-align:center;font-size:12px;color:var(--mut,#8e8e93);opacity:.7;margin:18px 0 6px}

@@ -25,6 +25,7 @@
 <script src="climate.js"></script>
 <script src="energia.js"></script>
 <script src="novita.js"></script>
+<script src="azione.js"></script>
 <script src="common.js"></script>
 <script>
 (function () {
@@ -40,13 +41,28 @@
   document.getElementById('app').innerHTML =
     U.pills() +
     '<div><p>' + new Date().toLocaleDateString(window.I18N ? window.I18N.loc() : 'it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) + '</p><h1>Snug Save</h1><p>Scegli la stagione per vedere le temperature da impostare mese per mese.</p></div>' +
-    '<div style="height:10px"></div>' + guida + start + '<div id="cons"></div>' +
+    '<div style="height:10px"></div>' + guida + start + '<div class="al" id="azione" aria-live="polite" style="display:none"></div><div class="al" id="conv" style="display:none"></div><div id="cons"></div>' +
     sec('w', 'inverno.html', 'snow', 'Inverno', 'Riscaldamento da novembre ad aprile', '<span class="bd">19–20 °C</span><span class="bd">Caldo</span>', now === 'inverno') +
     sec('s', 'estate.html', 'sun', 'Estate', 'Raffrescamento da giugno a settembre', '<span class="bd">26–27 °C</span><span class="bd">Freddo</span>', now === 'estate') +
     '<div class="cmds"><a class="cm" href="consigli.html"><i class="ab">' + U.I('bulb') + '</i><b>Consigli di risparmio</b><small>Inverno ed estate</small></a>' +
     '<a class="cm" href="energia.html"><i class="ab">' + U.I('flame') + '</i><b>Energia</b><small>Elettrica o gas: cosa conviene</small></a></div>' +
     '<p class="sm" style="text-align:center;margin-top:8px">Acceso solo quando sei in casa, spento fuori casa e di notte.</p>';
   var gok = document.getElementById('gok'); if (gok) gok.addEventListener('click', function () { try { localStorage.removeItem('clima.guida'); } catch (e) {} gok.closest('section').remove(); });
+
+  // Suggerimento di adesso e fonte che conviene: con il meteo live se c'è un luogo, altrimenti con la media del mese.
+  (function () {
+    var C = window.CLIMA, E = window.ENERGIA, st = C.load(), today = new Date(), m = today.getMonth() + 1, key = now;
+    var ea = document.getElementById('azione'), ec = document.getElementById('conv'), mkt = null, tf = Math.round(S.MESI[m] ? S.MESI[m].media : 15);
+    if (!key) { return; }
+    var sis = (key === 'inverno' && E.load().fonte === 'gas') ? 'caldaia' : 'split';
+    function paint() {
+      ea.style.display = ''; ea.innerHTML = window.AZIONE.azione({ S: S, key: key, sis: sis, today: today, tf: tf, stile: st.stile });
+      ec.style.display = ''; ec.innerHTML = window.AZIONE.conv({ S: S, key: key, month: m, today: today, mkt: mkt });
+    }
+    paint();
+    C.applica(S).then(function (i) { if (i && i.live && i.live.adesso) tf = Math.round(i.live.adesso.t); paint(); }).catch(function () {});
+    if (key === 'inverno') E.mercato().then(function (x) { mkt = x; paint(); }).catch(function () {});
+  })();
   window.ENERGIA.banner(document.getElementById('cons'), S, window.CLIMA, U);
   U.nav('home');
 })();

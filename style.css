@@ -164,3 +164,5 @@ textarea.in{padding:12px 14px;min-height:90px;line-height:1.4}
 .wide{grid-column:1/-1}
 
 .ver{text-align:center;font-size:12px;color:var(--mut,#8e8e93);opacity:.7;margin:18px 0 6px}
+
+.acts{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.4;color:var(--mut,#6b7280)}.acts li{margin:2px 0}.al small.warn{color:#b45309;font-weight:600}.al small.good{color:#1e8449;font-weight:600}

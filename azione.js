@@ -40,7 +40,7 @@
     return '<div class="fh"><span class="fl"><i class="dot"></i>Cosa fare ora</span><span class="fo">' + p.label + '</span></div>' +
       '<div class="fm"><div class="ftx"><b>' + tit + '</b><small>' + txt + '</small></div>' + big2 + '</div>' +
       (acts.length ? '<ul class="fa">' + acts.map(function (a) { return '<li><span class="ck">' + I('check') + '</span><span>' + a + '</span></li>'; }).join('') + '</ul>' : '') +
-      '<div class="fp">' + pill(STN[stile] || 'Bilanciato') + pill(x.live ? 'Meteo live' : 'Anno ' + x.anno) + '</div>';
+      '<div class="fp">' + (x.key === 'inverno' ? pill(caldaia ? I('flame') + 'Caldaia' : I('bolt') + 'Condizionatore') : pill(I('bolt') + 'Condizionatore')) + pill(STN[stile] || 'Bilanciato') + pill(x.live ? 'Meteo live' : 'Anno ' + x.anno) + '</div>';
   }
   // Quale fonte conviene nel mese (solo inverno: d'estate si raffresca sempre con l'elettricità). Card per la home.
   function conv(x) {

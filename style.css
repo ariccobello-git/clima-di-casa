@@ -194,3 +194,7 @@ textarea.in{padding:12px 14px;min-height:90px;line-height:1.4}
 .enc .er.win{color:var(--tx);font-weight:700}.enc .er.win .eb i{background:linear-gradient(90deg,var(--pri),color-mix(in srgb,var(--pri) 60%,#fff))}.enc .ev{text-align:right;font-weight:700}
 .enc .est{display:inline-flex;align-items:flex-start;gap:6px;margin-top:10px;padding:7px 11px;border-radius:14px;font-size:12.5px;font-weight:600;line-height:1.3}.enc .est .si{flex:none;width:14px;height:14px;margin-top:1px}
 .enc .est.good{background:rgba(30,132,73,.13);color:#1e8449}.enc .est.warn{background:rgba(217,119,6,.14);color:#b45309}
+
+.seg button .si{width:15px;height:15px;vertical-align:-2px;margin-right:5px}.fare .bd .si{width:13px;height:13px;vertical-align:-2px;margin-right:4px}
+.fare .fp{flex-wrap:wrap}
+.seg button{display:flex;align-items:center;justify-content:center}.bd .si{display:inline-block}.fare .fp{align-items:center}

@@ -74,7 +74,7 @@
   function fonteBadge() {
     if (!window.ENERGIA) return '';
     var e = window.ENERGIA.etichetta(key === 'inverno' ? window.ENERGIA.load().fonte : 'elettrica');
-    return '<span class="src">' + U.I(e.icon) + e.sym + ' \u00b7 ' + e.nome + '</span>';
+    return '<span class="src">' + U.I(e.icon) + e.nome + '</span>';
   }
   function hero() {
     var d = S.MESI[month], verb = cfg.modo, t = S.setPoint(month);
@@ -114,7 +114,7 @@
     els.meteo.innerHTML = h + '</small></div><a class="back" href="setup.html?p=1">' + (l ? 'Cambia' : 'Scegli') + '</a>';
     var f = Object.keys(C.STILI);
     var sist = '';
-    if (key === 'inverno' && window.ENERGIA) { var f0 = window.ENERGIA.load().fonte; sist = '<div class="fld" style="margin:6px 4px 0">Cosa usi per scaldare' + U.aiuto('sistema') + '</div><div class="seg" role="group" aria-label="Sistema"><button type="button" data-sis="elettrica" aria-pressed="' + (f0 !== 'gas') + '">Condizionatore</button><button type="button" data-sis="gas" aria-pressed="' + (f0 === 'gas') + '">Caldaia</button></div>'; }
+    if (key === 'inverno' && window.ENERGIA) { var f0 = window.ENERGIA.load().fonte; sist = '<div class="fld" style="margin:6px 4px 0">Cosa usi per scaldare' + U.aiuto('sistema') + '</div><div class="seg" role="group" aria-label="Sistema"><button type="button" data-sis="elettrica" aria-pressed="' + (f0 !== 'gas') + '">' + U.I('bolt') + 'Condizionatore</button><button type="button" data-sis="gas" aria-pressed="' + (f0 === 'gas') + '">' + U.I('flame') + 'Caldaia</button></div>'; }
     var dati = '<div class="fld" style="margin:10px 4px 0">Dati per le temperature</div><div class="seg" role="group" aria-label="Dati">' + [['live', 'Meteo live'], ['storico', 'Anno ' + C.annoScorso()]].map(function (x) { return '<button type="button" data-fonte="' + x[0] + '" aria-pressed="' + (x[0] === st.fonte) + '">' + x[1] + '</button>'; }).join('') + '</div><p class="sm" style="margin:0 4px">' + (st.fonte === 'live' ? 'A ogni apertura legge le previsioni di oggi e ricalcola il mese in corso.' : 'Usa le medie consolidate del ' + C.annoScorso() + ' per ogni mese. Dall’anno nuovo passa da solo all’anno concluso.') + '</p>';
     els.fonte.innerHTML = sist + dati + '<div class="fld" style="margin:10px 4px 0">Stile</div><div class="seg" role="group" aria-label="Stile">' + f.map(function (x) { return '<button type="button" data-stile="' + x + '" aria-pressed="' + (x === st.stile) + '">' + C.STILI[x].nome + '</button>'; }).join('') + '</div><p class="sm" style="margin:0 4px 10px">' + C.STILI[st.stile].d + '</p>';
   }

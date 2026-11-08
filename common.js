@@ -60,6 +60,21 @@
   ];
   function temaId() { try { var t = localStorage.getItem('clima.tema'); return TEMI.some(function (x) { return x.id === t; }) ? t : 'auto'; } catch (e) { return 'auto'; } }
   function setTema(id) { try { localStorage.setItem('clima.tema', id); } catch (e) {} applyHue(H, true); }
+  // Colore del testo/accenti: la luminosità si adatta alla tinta finché il contrasto WCAG AA (4.6:1) è garantito.
+  function lum(h, s, l) {
+    s /= 100; l /= 100; var a = s * Math.min(l, 1 - l);
+    function f(n) { var k = (n + h / 30) % 12, c = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); c = c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); return c; }
+    return 0.2126 * f(0) + 0.7152 * f(8) + 0.0722 * f(4);
+  }
+  function priCol(h, s, dark) {
+    var L = dark ? 68 : 34, bgL = dark ? 0.012 : 1, i;
+    for (i = 0; i < 40; i++) {
+      var y = lum(h, s, L), cr = dark ? (y + 0.05) / (bgL + 0.05) : (bgL + 0.05) / (y + 0.05);
+      if (cr >= (dark ? 6.8 : 6)) break;
+      L += dark ? 1 : -1;
+    }
+    return 'hsl(' + h + ' ' + s + '% ' + L + '%)';
+  }
   function w(x) { return ((Math.round(x) % 360) + 360) % 360; }
   function applyHue(h, forza) {
     var tm = TEMI.filter(function (x) { return x.id === temaId(); })[0], K = 1;
@@ -69,7 +84,7 @@
     r.classList.toggle('dk', d);
     st.setProperty('--h', w(h));
     st.setProperty('--g1', 'hsl(' + w(h) + ' ' + Math.round(82 * K) + '% 44%)'); st.setProperty('--g2', 'hsl(' + w(h - 16) + ' ' + Math.round(80 * K) + '% 38%)'); st.setProperty('--g3', 'hsl(' + w(h - 34) + ' ' + Math.round(76 * K) + '% 32%)');
-    st.setProperty('--pri', d ? 'hsl(' + w(h) + ' ' + Math.round(92 * K) + '% 68%)' : 'hsl(' + w(h) + ' ' + Math.round(86 * K) + '% 34%)');
+    st.setProperty('--pri', priCol(w(h), d ? Math.round(92 * K) : Math.round(86 * K), d));
     var L = d ? [26, 22, 24, 20] : [78, 82, 84, 80], S = d ? [60, 55, 60, 50] : [92, 88, 90, 70];
     [0, 40, -35, 80].forEach(function (o, i) { st.setProperty('--o' + (i + 1), 'hsl(' + w(h + (K < 1 ? 0 : o)) + ' ' + Math.round(S[i] * K) + '% ' + L[i] + '%)'); });
     st.setProperty('--bg', d ? 'hsl(' + w(h) + ' ' + Math.round(35 * K) + '% 6%)' : 'hsl(' + w(h) + ' ' + Math.round(45 * K) + '% 96%)');

@@ -55,7 +55,7 @@
     var r = una(core, lang);
     if (r === null) {
       // frasi separate: ogni frase si traduce da sola, le altre restano come sono
-      var parti = core.split(/(?<=[.!?])\s+/);
+      var parti = core.replace(/([.!?])\s+/g, '$1\u0001').split('\u0001');
       if (parti.length > 1) {
         var ok = false, out = parti.map(function (p) { var x = una(p, lang); if (x === null) { var cc = chiave(p); if (/[A-Za-zÀ-ÿ]{3}/.test(cc.k)) mancanti[cc.k] = 1; return p; } ok = true; return x; });
         if (ok) return m[1] + out.join(' ') + m[3];

@@ -63,7 +63,7 @@
       '<label class="fld" for="gas">Gas del riscaldamento in un anno, in Smc (facoltativo)</label><input class="in" id="gas" type="number" inputmode="decimal" placeholder="lo trovi in bolletta" value="' + v(c.gasSmc) + '"><p class="hint">Smc sono i metri cubi di gas che trovi in bolletta.' + U.aiuto('smc') + ' Se lo conosci, i calcoli partono dal tuo consumo reale. Conta solo il riscaldamento: se hai solo il totale annuo, togli circa 150 Smc per acqua calda e cucina.</p>' +
       '<p class="ok" id="sv" role="status"></p><div id="esito">' + esito(c) + '</div></section></div>';
     h += '<div class="stp' + (passo === 3 ? ' on' : '') + '"><h2>Prezzi dell’energia</h2><section class="card"><p class="sm">Prezzi tutto compreso, imposte incluse. Lascia vuoto per usare quelli di mercato' + (mkt ? ' (aggiornati al ' + esc(mkt.aggiornato) + ': luce ' + mkt.luce.toLocaleString('it-IT') + ' €/kWh, gas ' + mkt.gas.toLocaleString('it-IT') + ' €/Smc)' : '') + '.</p>' +
-      '<label class="fld" for="luce">Luce (€/kWh)</label><input class="in" id="luce" type="number" inputmode="decimal" step="0.0001" placeholder="per esempio 0,30" value="' + v(c.luce) + '">' +
+      (E.haBollette(c) ? '<p class="note2">Hai caricato una bolletta nella pagina Energia: per quella fonte i calcoli usano i suoi prezzi.</p>' : '') + '<label class="fld" for="luce">Luce (€/kWh)</label><input class="in" id="luce" type="number" inputmode="decimal" step="0.0001" placeholder="per esempio 0,30" value="' + v(c.luce) + '">' +
       '<label class="fld" for="gasp">Gas (€/Smc)</label><input class="in" id="gasp" type="number" inputmode="decimal" step="0.001" placeholder="per esempio 1,34" value="' + v(c.gas) + '">' +
       '<a class="btn sec2" href="energia.html">Vedi il consiglio elettrico o gas</a></section></div>';
     if (passo === 1) h += aspetto();
@@ -87,7 +87,7 @@
     else if (b.hasAttribute('data-lang')) { if (window.I18N) { window.I18N.imposta(b.getAttribute('data-lang')); location.reload(); } }
     else if (b.hasAttribute('data-mod')) { modifica = true; passo = 1; render(); window.scrollTo(0, 0); }
     else if (b.hasAttribute('data-canc')) { chiedi = b.getAttribute('data-canc') === '1'; render(); }
-    else if (b.hasAttribute('data-sicanc')) { st.luoghi = []; st.attivo = null; C.save(st); var e0 = E.load(); E.save({ mq: null, piani: 1, tipo: 'condominio', anno: null, ristr: null, gasSmc: null, fonte: e0.fonte, luce: null, gas: null, ultimaVerifica: null, finestra: null, consiglio: null }); chiedi = false; modifica = false; passo = 1; render(); }
+    else if (b.hasAttribute('data-sicanc')) { st.luoghi = []; st.attivo = null; C.save(st); var e0 = E.load(); E.save({ mq: null, piani: 1, tipo: 'condominio', anno: null, ristr: null, gasSmc: null, fonte: e0.fonte, luce: null, gas: null, ultimaVerifica: null, finestra: null, consiglio: null, budget: e0.budget, storico: e0.storico, bollette: e0.bollette, revisione: e0.revisione }); chiedi = false; modifica = false; passo = 1; render(); }
     else if (b.hasAttribute('data-passo')) { var qv = document.getElementById('q'); if (qv && qv.value) { /* niente da salvare: l'indirizzo si cerca con il pulsante */ } passo = +b.getAttribute('data-passo'); render(); window.scrollTo(0, 0); }
     else if (b.hasAttribute('data-tipo')) { var c = E.load(); leggi(); c = E.load(); c.tipo = b.getAttribute('data-tipo'); E.save(c); render(); }
     else if (b.id === 'cerca') {

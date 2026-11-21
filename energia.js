@@ -5,7 +5,7 @@
   // Fabbisogno utile di riscaldamento (kWh/m² anno) per epoca di costruzione, scala zona D (Roma).
   // Riferimento: ENEA-CTI, Rapporto annuale sulla certificazione energetica (banca dati APE nazionale SIAPE) e tipologie TABULA/EPISCOPE.
   var EPOCHE = [[1945, 190], [1960, 180], [1976, 165], [1991, 125], [2005, 90], [2015, 65], [9999, 40]];
-  var DEF = { mq: null, piani: 1, tipo: 'condominio', anno: null, ristr: null, gasSmc: null, fonte: 'elettrica', luce: null, gas: null, ultimaVerifica: null, finestra: null, consiglio: null, budget: null, storico: {} };
+  var DEF = { mq: null, piani: 1, tipo: 'condominio', anno: null, ristr: null, gasSmc: null, fonte: 'elettrica', luce: null, gas: null, ultimaVerifica: null, finestra: null, consiglio: null, budget: null, storico: {}, bollette: {}, revisione: false };
   var INV = [11, 12, 1, 2, 3, 4], GIORNI = { 11: 30, 12: 31, 1: 31, 2: 28, 3: 31, 4: 15 };
 
   function ls() { try { return root.localStorage; } catch (e) { return null; } }
@@ -61,7 +61,7 @@
   function cop(t) { return Math.max(2.2, Math.min(5, 3.5 + 0.12 * (t - 7))); }
   function costi(Q, t, pr) {
     // I prezzi "tutto compreso" includono quote fisse che non cambiano passando da una fonte all'altra: conto solo la parte variabile (circa 85 %).
-    var gasKwh = pr.gas * P.marg / (P.kwhPerSmc * P.eff), elKwh = pr.luce * P.marg / cop(t);
+    var gasKwh = pr.gas * (pr.mG || P.marg) / (P.kwhPerSmc * P.eff), elKwh = pr.luce * (pr.mL || P.marg) / cop(t);
     return { gas: Q * gasKwh, elettrica: Q * elKwh, cop: cop(t), gasKwh: gasKwh, elKwh: elKwh, kwhEl: Q / cop(t), smc: Q / (P.kwhPerSmc * P.eff) };
   }
   // Verdetto: cambia solo se il risparmio è tangibile (almeno 10 € al mese e l'8 %).
@@ -90,7 +90,18 @@
     st.consiglio = v.cambia ? { verso: v.verso, mese: m, risparmio: Math.round(v.risparmio), data: st.ultimaVerifica } : null;
     return st;
   }
-  function prezzi(st, mkt) { return { luce: st.luce > 0 ? st.luce : (mkt && mkt.luce) || 0.297, gas: st.gas > 0 ? st.gas : (mkt && mkt.gas) || 1.339 }; }
+  // Prezzi da usare: bolletta caricata, poi prezzi scritti nel Setup, poi mercato domestico.
+  function prezzi(st, mkt, d) {
+    var B = root.BOLLETTA, bl = st.bollette || {}, o = { luce: 0, gas: 0, mL: null, mG: null, fonteL: 'mercato', fonteG: 'mercato' };
+    [['luce', 'L', 0.297], ['gas', 'G', 1.339]].forEach(function (x) {
+      var k = x[0], b = bl[k], a = B && b ? B.aggiornaIndice(b, mkt, d || new Date()) : null;
+      if (a) { o[k] = a.prezzo; o['m' + x[1]] = a.marg; o['fonte' + x[1]] = 'bolletta'; }
+      else if (st[k] > 0) { o[k] = st[k]; o['fonte' + x[1]] = 'setup'; }
+      else o[k] = (mkt && mkt[k]) || x[2];
+    });
+    return o;
+  }
+  function haBollette(st) { var b = st.bollette || {}; return !!(b.luce || b.gas); }
   function mercato() { return fetch('data/mercato.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).catch(function () { return null; }); }
 
   // Budget del mese: stima con la fonte in uso a confronto con la cifra scelta. Ogni grado in meno vale circa il 7 % (ENEA: dal 5 al 10 %).
@@ -142,6 +153,6 @@
   }
 
   root.ENERGIA = { etichetta: etichetta, tmedDa: tmedDa, controlla: controlla, banner: banner, P: P, INV: INV, load: load, save: save, ok: ok, controllo: controllo, descrivi: descrivi, classe: classe, caloreAnno: caloreAnno, caloreMese: caloreMese, cop: cop, costi: costi,
-    verdetto: verdetto, registra: registra, chiaveMese: chiaveMese, budgetInfo: budgetInfo, report: report, vecchio: vecchio, meseRef: meseRef, finestra: finestra, dovuta: dovuta, verifica: verifica, prezzi: prezzi, mercato: mercato };
+    verdetto: verdetto, registra: registra, chiaveMese: chiaveMese, budgetInfo: budgetInfo, report: report, vecchio: vecchio, meseRef: meseRef, finestra: finestra, dovuta: dovuta, verifica: verifica, prezzi: prezzi, haBollette: haBollette, mercato: mercato };
   if (typeof module !== 'undefined') module.exports = root.ENERGIA;
 })(typeof window !== 'undefined' ? window : globalThis);

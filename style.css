@@ -199,3 +199,4 @@ textarea.in{padding:12px 14px;min-height:90px;line-height:1.4}
 .fare .fp{flex-wrap:wrap}
 .seg button{display:flex;align-items:center;justify-content:center}.bd .si{display:inline-block}.fare .fp{align-items:center}
 .ovr{color:#b35c00;font-weight:600;font-size:15px;margin:6px 0}html.dk .ovr{color:#f5b45a}.bar .over{background:linear-gradient(90deg,#f59e0b,#e4572e)}
+.btn.del{background:linear-gradient(135deg,#e4572e,#c0392b);box-shadow:none}.card.hl{box-shadow:0 0 0 2px var(--pri),0 10px 30px rgba(0,0,0,.08)}

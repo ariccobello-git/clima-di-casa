@@ -85,13 +85,13 @@
   var ATTR = ['placeholder', 'aria-label', 'title', 'alt'];
   function nodo(n) {
     if (n.nodeType === 3) {
-      var p = n.parentNode && n.parentNode.nodeName; if (p === 'SCRIPT' || p === 'STYLE' || p === 'TEXTAREA') return;
+      var p = n.parentNode && n.parentNode.nodeName; if (p === 'SCRIPT' || p === 'STYLE' || p === 'TEXTAREA' || (n.parentNode.getAttribute && n.parentNode.getAttribute('translate') === 'no')) return;
       var o = orig.get(n);
       if (o && n.data === o.out) { var nuovo = tr(o.it); if (nuovo !== o.out) { o.out = nuovo; n.data = nuovo; } return; }
       var it = n.data; if (!it.trim()) return;
       var out = tr(it); orig.set(n, { it: it, out: out }); if (out !== it) n.data = out;
     } else if (n.nodeType === 1) {
-      if (n.nodeName === 'SCRIPT' || n.nodeName === 'STYLE') return;
+      if (n.nodeName === 'SCRIPT' || n.nodeName === 'STYLE' || n.getAttribute('translate') === 'no') return;
       ATTR.forEach(function (a) {
         if (!n.hasAttribute(a)) return; var v = n.getAttribute(a), rec = attrOrig.get(n) || {};
         if (rec[a] && rec[a].out === v) { var x = tr(rec[a].it); if (x !== v) { rec[a].out = x; n.setAttribute(a, x); } return; }

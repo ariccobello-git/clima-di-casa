@@ -1,6 +1,6 @@
 (function () {
   var N = window.NOVITA, U = window.UI, app = document.getElementById('app');
-  var IC = { avviso: 'bell', prezzi: 'euro', consiglio: 'bolt', stagione: 'sun', anno: 'cloudsun', assente: 'clock', report: 'check', budget: 'euro' };
+  var IC = { avviso: 'bell', prezzi: 'euro', consiglio: 'bolt', stagione: 'sun', anno: 'cloudsun', assente: 'clock', report: 'check', budget: 'euro', revisione: 'bell' };
   function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   var SB = window.SB, me = (SB && SB.me && SB.me()) || {}, COND = ['prezzi', 'stagione', 'anno'], condiviso = {}, errore = '';
   function data(iso) { return new Date(iso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' }); }

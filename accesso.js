@@ -22,7 +22,7 @@
         '<input class="in" id="tel" type="tel" inputmode="tel" autocomplete="tel" value="' + esc(st.tel) + '" aria-label="Telefono">' + m() +
         '<button class="btn" id="send" type="button"' + (st.busy ? ' disabled' : '') + '>Invia il codice</button><button class="btn sec2" id="back" type="button">Indietro</button></section>';
     } else {
-      h += '<section class="card"><b>Inserisci il codice</b><p class="sm">Se il numero corrisponde, ricevi un codice di 6 cifre. Vale 10 minuti. Se non arriva, chiedilo all’amministratore.</p>' +
+      h += '<section class="card"><b>Inserisci il codice</b><p class="sm">L’amministratore vede il codice nella sua pagina Account e te lo manda su WhatsApp. Il codice ha 6 cifre e vale 15 minuti.</p>' +
         '<input class="in pin" id="cod" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="Codice" aria-label="Codice">' +
         '<input class="in pin" id="np" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="Nuova password" aria-label="Nuova password">' + m() +
         '<button class="btn" id="conf" type="button"' + (st.busy ? ' disabled' : '') + '>Cambia password</button><button class="btn sec2" id="back" type="button">Indietro</button></section>';
@@ -58,7 +58,10 @@
       st.tel = document.getElementById('tel').value; var n = SB.norm(st.tel);
       if (!/^\+\d{8,15}$/.test(n)) return say('Numero non valido.', true);
       st.busy = true; st.msg = ''; render();
-      SB.rpc('reset_richiedi', { p_nome: st.nome, p_tel: n }).then(function () { st.v = 'r2'; st.tel = n; say('Richiesta inviata.'); })
+      SB.rpc('reset_richiedi', { p_nome: st.nome, p_tel: n }).then(function (r) {
+        if (r && r.admin) { st.v = 'login'; return say('L’account amministratore non si reimposta dall’app, per sicurezza. Chiedi il reset al supporto.', true); }
+        st.v = 'r2'; st.tel = n; say('Richiesta inviata all’amministratore.');
+      })
         .catch(function () { say('Collegamento non riuscito. Riprova.', true); });
     } else if (b.id === 'conf') {
       var c = document.getElementById('cod').value.trim(), np = document.getElementById('np').value;
@@ -66,7 +69,7 @@
       if (!/^\d{6}$/.test(np)) return say('La nuova password ha 6 cifre.', true);
       st.busy = true; st.msg = ''; render();
       SB.rpc('reset_conferma', { p_nome: st.nome, p_tel: SB.norm(st.tel), p_codice: c, p_nuova: np }).then(function (r) {
-        if (r.ok) { st.v = 'login'; say('Password cambiata. Ora puoi accedere.'); } else say(ERR[r.errore] || 'Errore.', true);
+        if (r.ok) { st.v = 'login'; say('Password cambiata. Ora puoi accedere. I dati della casa vanno reinseriti nel Setup.'); } else say(ERR[r.errore] || 'Errore.', true);
       }).catch(function () { say('Collegamento non riuscito. Riprova.', true); });
     }
   });

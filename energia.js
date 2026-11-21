@@ -1,16 +1,22 @@
 (function (root) {
   // Casa, costi e consiglio elettrico/gas. Stime indicative, non sostituiscono un APE.
   var KEY = 'clima.casa.v1';
-  var P = { eff: 0.9, kwhPerSmc: 11.109, presenza: 0.7, altezza: 2.6, marg: 0.85, sogliaEuro: 10, sogliaPct: 0.08, fallbackKwh: 3000 };
+  var P = { gradoPct: 0.07, eff: 0.9, kwhPerSmc: 11.109, presenza: 0.7, altezza: 2.6, marg: 0.85, sogliaEuro: 10, sogliaPct: 0.08, fallbackKwh: 3000 };
   // Fabbisogno utile di riscaldamento (kWh/m² anno) per epoca di costruzione, scala zona D (Roma).
   // Riferimento: ENEA-CTI, Rapporto annuale sulla certificazione energetica (banca dati APE nazionale SIAPE) e tipologie TABULA/EPISCOPE.
   var EPOCHE = [[1945, 190], [1960, 180], [1976, 165], [1991, 125], [2005, 90], [2015, 65], [9999, 40]];
-  var DEF = { mq: null, piani: 1, tipo: 'condominio', anno: null, ristr: null, gasSmc: null, fonte: 'elettrica', luce: null, gas: null, ultimaVerifica: null, finestra: null, consiglio: null };
+  var DEF = { mq: null, piani: 1, tipo: 'condominio', anno: null, ristr: null, gasSmc: null, fonte: 'elettrica', luce: null, gas: null, ultimaVerifica: null, finestra: null, consiglio: null, budget: null, storico: {} };
   var INV = [11, 12, 1, 2, 3, 4], GIORNI = { 11: 30, 12: 31, 1: 31, 2: 28, 3: 31, 4: 15 };
 
   function ls() { try { return root.localStorage; } catch (e) { return null; } }
   function load() { var o = {}, s = {}; try { s = (root.VAULT ? root.VAULT.get(KEY) : JSON.parse(ls().getItem(KEY))) || {}; } catch (e) {} for (var k in DEF) o[k] = s[k] !== undefined ? s[k] : DEF[k]; return o; }
-  function save(s) { try { if (root.VAULT) root.VAULT.set(KEY, s); else ls().setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+  function chiaveMese(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2); }
+  // Ricorda la fonte usata in ogni mese (ultimi 12), per il report del mese concluso.
+  function registra(s, d) {
+    var h = s.storico && typeof s.storico === 'object' ? s.storico : {}; h[chiaveMese(d || new Date())] = s.fonte;
+    var k = Object.keys(h).sort(); while (k.length > 12) delete h[k.shift()]; s.storico = h; return s;
+  }
+  function save(s) { registra(s); try { if (root.VAULT) root.VAULT.set(KEY, s); else ls().setItem(KEY, JSON.stringify(s)); } catch (e) {} }
 
   function annoEff(c) { var a = +c.anno, r = +c.ristr; return (r && r > a) ? a + 0.6 * (r - a) : a; }
   function eph(c) { var y = annoEff(c); for (var i = 0; i < EPOCHE.length; i++) if (y <= EPOCHE[i][0]) return EPOCHE[i][1]; return 40; }
@@ -87,6 +93,27 @@
   function prezzi(st, mkt) { return { luce: st.luce > 0 ? st.luce : (mkt && mkt.luce) || 0.297, gas: st.gas > 0 ? st.gas : (mkt && mkt.gas) || 1.339 }; }
   function mercato() { return fetch('data/mercato.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).catch(function () { return null; }); }
 
+  // Budget del mese: stima con la fonte in uso a confronto con la cifra scelta. Ogni grado in meno vale circa il 7 % (ENEA: dal 5 al 10 %).
+  function budgetInfo(st, d, tmed, pr) {
+    var b = +st.budget; if (!(b > 0)) return null;
+    var m = meseRef(d); if (m === null) return { budget: b, fuori: true };
+    var k = costi(caloreMese(st, m, tmed), tmed(m), pr), costo = k[st.fonte], alt = st.fonte === 'gas' ? 'elettrica' : 'gas';
+    var r = { budget: b, mese: m, costo: costo, pct: costo / b, sfora: costo > b, gradi: 0, alt: alt, altCosto: k[alt] };
+    if (r.sfora) { var g = Math.ceil((1 - b / costo) / P.gradoPct - 1e-9); r.gradi = g; r.basta = g <= 3; }
+    return r;
+  }
+  // Report del mese concluso: stima con la fonte usata, confronto con l'altra fonte e con il budget.
+  function report(st, d, tmed, pr) {
+    var p = new Date(d.getFullYear(), d.getMonth() - 1, 15), m = p.getMonth() + 1; if (INV.indexOf(m) < 0) return null;
+    var key = chiaveMese(p), h = st.storico || {}, usata = h[key];
+    if (!usata) { var prima = Object.keys(h).sort().filter(function (x) { return x < key; }).pop(); usata = prima ? h[prima] : null; }
+    if (!usata) return null;
+    var k = costi(caloreMese(st, m, tmed), tmed(m), pr), alt = usata === 'gas' ? 'elettrica' : 'gas';
+    return { id: key, mese: m, anno: p.getFullYear(), fonte: usata, costo: k[usata], altro: k[alt], alt: alt, risparmio: k[alt] - k[usata], budget: +st.budget > 0 ? +st.budget : null };
+  }
+  // Dati di mercato più vecchi di 35 giorni: vanno aggiornati.
+  function vecchio(mkt, d) { if (!mkt || !mkt.aggiornato) return false; var t = Date.parse(mkt.aggiornato); return isFinite(t) && (d - t) > 35 * 864e5; }
+
   function etichetta(f) { return f === 'gas' ? { sym: 'G', nome: 'Gas metano', icon: 'flame' } : { sym: 'E', nome: 'Elettrica', icon: 'bolt' }; }
   function tmedDa(S, C, now) {
     var l = C && C.luogo(), stat = l && C.statCache ? C.statCache(l, now) : null;
@@ -115,6 +142,6 @@
   }
 
   root.ENERGIA = { etichetta: etichetta, tmedDa: tmedDa, controlla: controlla, banner: banner, P: P, INV: INV, load: load, save: save, ok: ok, controllo: controllo, descrivi: descrivi, classe: classe, caloreAnno: caloreAnno, caloreMese: caloreMese, cop: cop, costi: costi,
-    verdetto: verdetto, meseRef: meseRef, finestra: finestra, dovuta: dovuta, verifica: verifica, prezzi: prezzi, mercato: mercato };
+    verdetto: verdetto, registra: registra, chiaveMese: chiaveMese, budgetInfo: budgetInfo, report: report, vecchio: vecchio, meseRef: meseRef, finestra: finestra, dovuta: dovuta, verifica: verifica, prezzi: prezzi, mercato: mercato };
   if (typeof module !== 'undefined') module.exports = root.ENERGIA;
 })(typeof window !== 'undefined' ? window : globalThis);

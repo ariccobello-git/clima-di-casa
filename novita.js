@@ -14,7 +14,7 @@
   function n4(x) { return Number(x).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 4 }); }
   function giorni(a, b) { return Math.floor((b - a) / 864e5); }
 
-  // Calcolo puro: aggiunge le nuove indicazioni a st. ctx = { now, mercato, consiglio }. Alla prima apertura registra solo il punto di partenza.
+  // Calcolo puro: aggiunge le nuove indicazioni a st. ctx = { now, mercato, consiglio, report, budget, nomeMese }. Alla prima apertura registra solo il punto di partenza.
   function calcola(st, ctx) {
     var v = st.visto, now = ctx.now, nuovi = [], primo = !st.ultima && !Object.keys(v).length, iso = now.toISOString();
     function add(id, tipo, titolo, testo, href, label) {
@@ -42,6 +42,10 @@
     var y = now.getFullYear() - 1;
     if (!primo && v.anno && v.anno !== y) add('anno-' + y, 'anno', 'Nuovi dati meteo dell’anno ' + y, 'Per l’opzione "Anno scorso" ora uso le medie del ' + y + ', l’ultimo anno concluso.', 'meteo.html', 'Apri Meteo');
     v.anno = y;
+    var r = ctx.report;
+    if (r && !primo) add('report-' + r.id, 'report', 'Report di ' + ctx.nomeMese(r.mese), 'Il riepilogo del mese concluso è pronto: spesa stimata e confronto tra le due fonti.', 'energia.html', 'Apri Energia');
+    var b = ctx.budget;
+    if (b && b.sfora) add('budget-' + now.getFullYear() + '-' + (now.getMonth() + 1), 'budget', 'Budget del mese a rischio', 'La stima di questo mese supera il budget che hai scelto. Nella pagina Energia trovi come rientrare.', 'energia.html', 'Apri Energia');
     var c = ctx.consiglio;
     if (c && c.data) add('consiglio-' + c.data, 'consiglio', 'Conviene passare a ' + (c.verso === 'gas' ? 'gas metano' : 'elettrica'), 'Risparmio stimato circa ' + c.risparmio + ' € al mese. Decidi dalla pagina Energia.', 'energia.html', 'Apri Energia');
     st.items = st.items.concat(nuovi); st.ultima = iso;
@@ -65,7 +69,9 @@
   function avvia() {
     var fine = function (mkt) {
       var s = stato(), casa = rd(CASA, {});
-      s = calcola(s, { now: new Date(), mercato: mkt, consiglio: casa.consiglio }); salva(s); badge(); notifica();
+      var now = new Date(), ctx = { now: now, mercato: mkt, consiglio: casa.consiglio }, E = root.ENERGIA, S = root.SCHED;
+      if (E && S) { try { var st = E.load(), tm = E.tmedDa(S, root.CLIMA, now), pr = E.prezzi(st, mkt); ctx.report = E.report(st, now, tm, pr); ctx.budget = E.budgetInfo(st, now, tm, pr); ctx.nomeMese = function (m) { return S.MESI[m].nome.toLowerCase(); }; } catch (e) {} }
+      s = calcola(s, ctx); salva(s); badge(); notifica();
       var SB = root.SB, tok = SB && SB.tok && SB.tok();
       if (tok) SB.rpc('avvisi_elenco', { tok: tok }).then(function (l) { var s2 = stato(); if (unisci(s2, l)) { salva(s2); badge(); notifica(); } }).catch(function () {});
     };

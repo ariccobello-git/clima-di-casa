@@ -13,42 +13,41 @@
 <script src="supa.js"></script>
 <script src="i18n.js"></script>
 <script src="i18n-data.js"></script>
-<script src="vault.js"></script>
-<script src="gate.js"></script>
 </head>
 <body>
 <main id="app"></main>
 <script src="schedule.js"></script>
-<script src="novita.js"></script>
 <script src="common.js"></script>
 <script>
 (function () {
-  var U = window.UI;
+  var U = window.UI, dentro = !!(window.SB && window.SB.tok()), torna = dentro ? 'index.html' : 'accesso.html', tl = dentro ? 'Stagioni' : 'Accesso';
   function list(a) { return '<ul class="rules">' + a.map(function (r) { return '<li>' + U.I(r[0]) + '<span>' + r[1] + '</span></li>'; }).join('') + '</ul>'; }
   function step(n, t, d) { return '<li><span class="sw tn" style="flex:none!important;width:22px;font-weight:800;color:var(--pri)">' + n + '</span><span><strong>' + t + '</strong><span class="wh" style="display:block;color:var(--mu);font-size:14px">' + d + '</span></span></li>'; }
   U.applyHue(235);
   document.getElementById('app').innerHTML =
-    '<div class="hd"><a class="back" href="index.html">' + U.I('back') + 'Stagioni</a></div>' +
+    '<div class="hd"><a class="back" href="' + torna + '">' + U.I('back') + tl + '</a></div>' +
     '<div><h1>Reset password</h1><p>Come recuperare l’accesso, per l’utente e per l’amministratore.</p></div>' +
     '<h2>Se sei un utente</h2><section class="card"><ol class="lst" style="list-style:none;padding:0;margin:0">' +
       step(1, 'Apri “Password dimenticata”', 'Nella pagina di accesso, sotto il campo della password.') +
       step(2, 'Scrivi il tuo numero', 'Il prefisso +39 è già inserito. Usa lo stesso numero che hai dato all’amministratore.') +
-      step(3, 'Aspetta il codice su WhatsApp', 'Sono 6 cifre e valgono pochi minuti. Se non arriva, attendi un minuto e chiedilo di nuovo.') +
+      step(3, 'Ricevi il codice dall’amministratore', 'Lo vede nella sua pagina Account e te lo manda su WhatsApp. Sono 6 cifre e valgono 15 minuti.') +
       step(4, 'Scegli la nuova password', 'Sempre di 6 cifre. Poi accedi con il tuo nome e la nuova password.') +
     '</ol></section>' +
     '<h2>Se non funziona</h2><section class="card">' + list([
       ['shield', 'Il numero deve essere identico a quello registrato. Se è diverso, o l’hai cambiato, il codice non parte e non ti viene detto il perché: scrivi all’amministratore.'],
-      ['clock', 'Dopo alcuni tentativi sbagliati l’account si blocca. Solo l’amministratore può sbloccarlo.'],
+      ['clock', 'Dopo 5 tentativi sbagliati l’account si blocca. Il reset con il codice lo sblocca, oppure lo sblocca l’amministratore.'],
+      ['home', 'Con una nuova password i dati della casa salvati sul telefono vanno reinseriti nel Setup: sono protetti dalla vecchia password.'],
       ['power', 'Un codice usato o scaduto non vale più: chiedine uno nuovo.']
     ]) + '</section>' +
     '<h2>Se sei l’amministratore</h2><section class="card"><ol class="lst" style="list-style:none;padding:0;margin:0">' +
-      step(1, 'Apri il pannello admin', 'Elenco degli utenti con stato: attivo o bloccato.') +
-      step(2, 'Sblocca l’account', 'Azzera i tentativi sbagliati senza cambiare la password.') +
-      step(3, 'Genera una nuova password', 'Il sistema crea 6 cifre nuove e le mostra una sola volta. Comunicale all’utente.') +
-      step(4, 'Correggi il numero di telefono', 'Se l’utente ha cambiato numero, aggiornalo: da quel momento vale per il reset.') +
-    '</ol><p class="sm">Le password sono cifrate: nessuno può leggerle, nemmeno tu. Si possono solo sostituire.</p></section>' +
-    '<div class="cmds"><a class="cm" href="index.html"><i class="ab">' + U.I('home') + '</i><b>Torna alle stagioni</b><small>Temperature mese per mese</small></a></div>';
-  U.nav('home');
+      step(1, 'Apri Account', 'Elenco degli utenti con stato: attivo, bloccato o con richiesta di reset.') +
+      step(2, 'Invia il codice', 'Se un utente ha chiesto il reset, sotto il suo nome compare il codice: tocca Invia codice su WhatsApp.') +
+      step(3, 'Sblocca l’account', 'Azzera i tentativi sbagliati senza cambiare la password.') +
+      step(4, 'Genera una nuova password', 'Il sistema crea 6 cifre nuove e le mostra una sola volta. Comunicale all’utente.') +
+      step(5, 'Correggi il numero di telefono', 'Se l’utente ha cambiato numero, aggiornalo: da quel momento vale per il reset.') +
+    '</ol><p class="sm">Se hai dimenticato la password dell’amministratore, l’app non la reimposta da sola, per sicurezza: chiedi il reset al supporto. Dopo 5 tentativi sbagliati l’accesso admin si ferma per 15 minuti.</p><p class="sm">Le password sono cifrate: nessuno può leggerle, nemmeno tu. Si possono solo sostituire.</p></section>' +
+    (dentro ? '<div class="cmds"><a class="cm" href="index.html"><i class="ab">' + U.I('home') + '</i><b>Torna alle stagioni</b><small>Temperature mese per mese</small></a></div>' : '<div class="cmds"><a class="cm" href="accesso.html"><i class="ab">' + U.I('shield') + '</i><b>Torna all’accesso</b><small>Nome e password</small></a></div>');
+  if (dentro) U.nav('home');
 })();
 </script>
 </body>

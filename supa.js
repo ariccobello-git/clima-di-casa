@@ -9,7 +9,7 @@
     t = String(t || '').replace(/[^0-9+]/g, ''); if (t.indexOf('00') === 0) t = '+' + t.slice(2);
     if (t.charAt(0) !== '+') t = '+39' + t.replace(/^0+(?=3)/, ''); return t;
   }
-  // L'accesso vale solo finché usi l'app: scade dopo 1 minuto senza tocchi, a schermo spento o se esci dall'app per più di 10 secondi.
+  // L'accesso vale solo finché usi l'app: scade dopo 1 minuto senza tocchi o dopo 2 minuti con l'app in secondo piano o lo schermo spento.
   var GRACE = 130, IDLE = 60;
   function ss() { try { return window.sessionStorage; } catch (e) { return null; } }
   // Pulizia di vecchi accessi salvati in modo permanente.
@@ -18,7 +18,7 @@
     var p = (window.caches && caches.keys) ? caches.keys().then(function (k) { return Promise.all(k.map(function (x) { return caches.delete(x); })); }) : Promise.resolve();
     p.catch(function () {}).then(function () { location.replace(location.pathname + '?r=' + Date.now()); });
   }
-  var VER = '1.10 · 21/11/2026';
+  var VER = '1.11 · 21/11/2026';
   window.SB = {
     ver: VER,
     rpc: rpc, norm: norm, aggiorna: aggiorna,
